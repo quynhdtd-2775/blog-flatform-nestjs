@@ -26,7 +26,7 @@ import { UsersController } from './modules/users/users.controller';
         migrations: [__dirname + '/database/migrations/*{.ts,.js}'],
         autoLoadEntities: true,
         synchronize: false,
-        logging: false,
+        logging: true,
       }),
       inject: [ConfigService],
     }),
