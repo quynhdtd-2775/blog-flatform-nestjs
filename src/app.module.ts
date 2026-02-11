@@ -6,6 +6,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { AppService } from './app.service';
 import { UsersModule } from './modules/users/users.module';
 import { UsersController } from './modules/users/users.controller';
+import { dataSource } from './configs/typeorm.config';
 
 @Module({
   imports: [
@@ -15,19 +16,7 @@ import { UsersController } from './modules/users/users.controller';
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get('DB_HOST'),
-        port: configService.get('DB_PORT'),
-        username: configService.get('DB_USERNAME'),
-        password: configService.get('DB_PASSWORD'),
-        database: configService.get('DB_NAME'),
-        entities: [__dirname + '/database/entities/*.entity{.ts,.js}'],
-        migrations: [__dirname + '/database/migrations/*{.ts,.js}'],
-        autoLoadEntities: true,
-        synchronize: false,
-        logging: true,
-      }),
+      useFactory: () => dataSource.options,
       inject: [ConfigService],
     }),
     AuthModule,
