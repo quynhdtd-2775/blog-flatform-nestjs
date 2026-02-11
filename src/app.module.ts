@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
+import { AuthModule } from './modules/auth/auth.module';
 import { AppService } from './app.service';
-import { BlogsController } from './blogs/blogs.controller';
-import { AuthModule } from './auth/auth.module';
-import { User } from './users/user.entity';
+import { UsersModule } from './modules/users/users.module';
+import { UsersController } from './modules/users/users.controller';
 
 @Module({
   imports: [
@@ -22,19 +22,18 @@ import { User } from './users/user.entity';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_NAME'),
-        secret: configService.get<string>('JWT_SECRET'),
-        signOptions: {
-          expiresIn: configService.get<string>('JWT_EXPIRES_IN'),
-        },
-        entities: [User],
-        synchronize: true,
+        entities: [__dirname + '/database/entities/*.entity{.ts,.js}'],
+        migrations: [__dirname + '/database/migrations/*{.ts,.js}'],
+        autoLoadEntities: true,
+        synchronize: false,
         logging: false,
       }),
       inject: [ConfigService],
     }),
     AuthModule,
+    UsersModule,
   ],
-  controllers: [AppController, BlogsController],
+  controllers: [AppController, UsersController],
   providers: [AppService],
 })
 export class AppModule {}
