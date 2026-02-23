@@ -5,7 +5,7 @@
     "minLength": "This field must be at least {min} characters long.",
     "maxLength": "This field must be no more than {max} characters long.",
     "invalidCredentials": "Invalid credentials.",
-    "notFound": "User not found."
+    "userNotFound": "User not found."
   },
   "auth": {
     "emailExists": "Email already exists."

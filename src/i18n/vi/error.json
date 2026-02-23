@@ -5,7 +5,7 @@
     "minLength": "Trường này phải có ít nhất {min} ký tự.",
     "maxLength": "Trường này phải có nhiều nhất {max} ký tự.",
     "invalidCredentials": "Thông tin đăng nhập không hợp lệ.",
-    "notFound": "Người dùng không tìm thấy."
+    "userNotFound": "Người dùng không tìm thấy."
   },
   "auth": {
     "emailExists": "Email đã tồn tại."

@@ -30,7 +30,7 @@ export class UsersService {
     });
 
     if (!user) {
-      throw new NotFoundException(i18n()?.t('error.validation.notFound'));
+      throw new NotFoundException(i18n()?.t('error.validation.userNotFound'));
     }
 
     return user;
