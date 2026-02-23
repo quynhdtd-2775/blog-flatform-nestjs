@@ -6,7 +6,7 @@ export class SignupDto {
   email: string;
 
   @IsNotEmpty({ message: 'error.validation.required' })
-  @MinLength(6, { message: 'error.validation.minLength' })
+  @MinLength(6, { message: 'error.validation.minLength', context: { min: 6 } })
   password: string;
 }
 
@@ -16,6 +16,6 @@ export class LoginDto {
   email: string;
 
   @IsNotEmpty({ message: 'error.validation.required' })
-  @MinLength(6, { message: 'error.validation.minLength' })
+  @MinLength(6, { message: 'error.validation.minLength', context: { min: 6 } })
   password: string;
 }

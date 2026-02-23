@@ -15,6 +15,10 @@ import { ConfigService } from '@nestjs/config';
       useFactory: (config: ConfigService) => {
         const secret = config.get<string>('JWT_SECRET');
 
+        if (!secret) {
+          throw new Error('JWT_SECRET is not defined in environment variables');
+        }
+
         return {
           secret,
           signOptions: {

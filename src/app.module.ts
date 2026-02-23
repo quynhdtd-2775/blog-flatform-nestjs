@@ -8,7 +8,7 @@ import { UsersModule } from './modules/users/users.module';
 import { UsersController } from './modules/users/users.controller';
 import { dataSource } from './configs/typeorm.config';
 import { I18nModule, AcceptLanguageResolver } from 'nestjs-i18n';
-import path from 'path';
+import * as path from 'path';
 
 @Module({
   imports: [

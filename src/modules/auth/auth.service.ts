@@ -38,16 +38,16 @@ export class AuthService {
   // 🔹 LOGIN
   async login(email: string, password: string) {
     const i18n = I18nContext.current();
+
     const user = await this.userRepo.findOne({ where: { email } });
 
-    if (!user) {
-      throw new BadRequestException(
-        i18n?.t('error.validation.invalidCredentials'),
-      );
-    }
+    const DUMMY_PASSWORD_HASH = bcrypt.hashSync('dummy_password', 10);
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
+    const passwordHash = user?.password ?? DUMMY_PASSWORD_HASH;
+
+    const isMatch = await bcrypt.compare(password, passwordHash);
+
+    if (!user || !isMatch) {
       throw new BadRequestException(
         i18n?.t('error.validation.invalidCredentials'),
       );
