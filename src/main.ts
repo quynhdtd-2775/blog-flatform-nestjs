@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { UnprocessableEntityException, ValidationPipe } from '@nestjs/common';
+import { I18nValidationPipe } from 'nestjs-i18n';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -25,7 +26,13 @@ async function bootstrap() {
         });
       },
     }),
+
+    new I18nValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
   );
+
   await app.listen(process.env.PORT ?? 3000);
 }
 
