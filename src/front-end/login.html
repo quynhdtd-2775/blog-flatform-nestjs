@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Test Login API</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 400px;
+      margin: 40px auto;
+    }
+    input, button, select {
+      width: 100%;
+      padding: 8px;
+      margin: 6px 0;
+    }
+    pre {
+      background: #f4f4f4;
+      padding: 10px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Login API Test</h2>
+
+  <label>Email</label>
+  <input id="email" type="email" placeholder="test@gmail.com" />
+
+  <label>Password</label>
+  <input id="password" type="password" placeholder="123456" />
+
+  <label>Language</label>
+  <select id="lang">
+    <option value="vi">Vietnamese</option>
+    <option value="en">English</option>
+  </select>
+
+  <button onclick="login()">Login</button>
+
+  <h3>Response</h3>
+  <pre id="result">---</pre>
+
+  <script>
+    async function login() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const lang = document.getElementById('lang').value;
+
+      const res = await fetch('http://localhost:3000/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept-Language': lang
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+      document.getElementById('result').textContent =
+        JSON.stringify(data, null, 2);
+    }
+  </script>
+
+</body>
+</html>

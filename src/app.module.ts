@@ -7,6 +7,8 @@ import { AppService } from './app.service';
 import { UsersModule } from './modules/users/users.module';
 import { UsersController } from './modules/users/users.controller';
 import { dataSource } from './configs/typeorm.config';
+import { I18nModule, AcceptLanguageResolver } from 'nestjs-i18n';
+import path from 'path';
 
 @Module({
   imports: [
@@ -18,6 +20,14 @@ import { dataSource } from './configs/typeorm.config';
       imports: [ConfigModule],
       useFactory: () => dataSource.options,
       inject: [ConfigService],
+    }),
+    I18nModule.forRoot({
+      fallbackLanguage: 'en',
+      loaderOptions: {
+        path: path.join(process.cwd(), 'src/i18n'),
+        watch: true,
+      },
+      resolvers: [AcceptLanguageResolver],
     }),
     AuthModule,
     UsersModule,
