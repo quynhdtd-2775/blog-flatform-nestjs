@@ -6,6 +6,7 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { User } from '../../database/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { ConfigService } from '@nestjs/config';
         };
       },
     }),
+    UsersModule,
   ],
   providers: [AuthService],
   controllers: [AuthController],

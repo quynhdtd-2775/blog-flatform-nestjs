@@ -4,8 +4,9 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
 import { User } from '../../database/entities/user.entity';
-import { I18nContext } from 'nestjs-i18n';
 import { JwtService } from '@nestjs/jwt';
+import { i18n } from 'src/helpers/common';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class AuthService {
@@ -13,43 +14,38 @@ export class AuthService {
     @InjectRepository(User)
     private userRepo: Repository<User>,
     private readonly jwtService: JwtService,
+    private readonly usersService: UsersService,
   ) {}
 
   // 🔹 SIGNUP
   async signup(email: string, password: string) {
-    const i18n = I18nContext.current();
-    const existing = await this.userRepo.findOne({ where: { email } });
+    const existing = await this.usersService.findByEmail(email);
+
     if (existing) {
-      throw new BadRequestException(i18n?.t('error.auth.emailExists'));
+      throw new BadRequestException(i18n()?.t('error.auth.emailExists'));
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = this.userRepo.create({
-      email,
-      password: hashedPassword,
-    });
+    const user = await this.usersService.createUser(email, hashedPassword);
 
-    await this.userRepo.save(user);
-
-    return { message: i18n?.t('message.signupSuccess') };
+    return {
+      message: i18n()?.t('message.signupSuccess'),
+      user,
+    };
   }
 
   // 🔹 LOGIN
   async login(email: string, password: string) {
-    const i18n = I18nContext.current();
+    const user = await this.usersService.findByEmailOrThrow(email);
 
-    const user = await this.userRepo.findOne({ where: { email } });
-
-    const DUMMY_PASSWORD_HASH = bcrypt.hashSync('dummy_password', 10);
-
-    const passwordHash = user?.password ?? DUMMY_PASSWORD_HASH;
+    const passwordHash = user?.password || '';
 
     const isMatch = await bcrypt.compare(password, passwordHash);
 
     if (!user || !isMatch) {
       throw new BadRequestException(
-        i18n?.t('error.validation.invalidCredentials'),
+        i18n()?.t('error.validation.invalidCredentials'),
       );
     }
 
