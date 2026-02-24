@@ -8,6 +8,8 @@
     "userNotFound": "Người dùng không tìm thấy."
   },
   "auth": {
-    "emailExists": "Email đã tồn tại."
+    "emailExists": "Email đã tồn tại.",
+    "validAccessToken": "Thiếu token truy cập.",
+    "invalidAccessToken": "Token không hợp lệ hoặc đã hết hạn."
   }
 }
