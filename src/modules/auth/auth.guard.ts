@@ -21,7 +21,7 @@ export class JwtAuthGuard implements CanActivate {
     const token = this.extractTokenFromHeader(request);
 
     if (!token) {
-      throw new UnauthorizedException(i18n().t('auth.validAccessToken'));
+      throw new UnauthorizedException(i18n().t('error.auth.validAccessToken'));
     }
 
     try {
@@ -32,7 +32,9 @@ export class JwtAuthGuard implements CanActivate {
       request['user'] = payload;
       return true;
     } catch {
-      throw new UnauthorizedException(i18n().t('auth.invalidAccessToken'));
+      throw new UnauthorizedException(
+        i18n().t('error.auth.invalidAccessToken'),
+      );
     }
   }
 

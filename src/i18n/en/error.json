@@ -8,7 +8,7 @@
     "userNotFound": "User not found."
   },
   "auth": {
-    "emailExists": "Email already exists.", 
+    "emailExists": "Email already exists.",
     "validAccessToken": "Missing access token.",
     "invalidAccessToken": "Invalid or expired token."
   }
