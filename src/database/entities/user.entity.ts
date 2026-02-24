@@ -10,4 +10,22 @@ export class User {
 
   @Column()
   password: string;
+
+  @Column({
+    type: 'varchar',
+    nullable: true,
+  })
+  username: string | null;
+
+  @Column({
+    type: 'varchar',
+    nullable: true,
+  })
+  bio: string | null;
+
+  @Column({
+    type: 'varchar',
+    nullable: true,
+  })
+  image: string | null;
 }
