@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/database/entities/user.entity';
 import { i18n } from 'src/helpers/common';
 import { Repository } from 'typeorm';
+import { UserSerializer, UserViewType } from './user.serializer';
 
 @Injectable()
 export class UsersService {
@@ -34,5 +35,21 @@ export class UsersService {
     }
 
     return user;
+  }
+
+  async getCurrentUserByIdOrThrow(userId: number) {
+    const user = await this.userRepo.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException(i18n()?.t('error.validation.userNotFound'));
+    }
+
+    return {
+      user: new UserSerializer(user, {
+        type: UserViewType.FULL_INFO,
+      }).serialize(),
+    };
   }
 }
