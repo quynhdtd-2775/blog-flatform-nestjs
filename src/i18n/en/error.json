@@ -2,6 +2,7 @@
   "validation": {
     "required": "This field is required.",
     "email": "Invalid email format.",
+    "image": "Invalid image format. Allowed formats: jpg, jpeg, png.",
     "minLength": "This field must be at least {min} characters long.",
     "maxLength": "This field must be no more than {max} characters long.",
     "invalidCredentials": "Invalid credentials.",
@@ -10,6 +11,7 @@
   "auth": {
     "emailExists": "Email already exists.",
     "validAccessToken": "Missing access token.",
-    "invalidAccessToken": "Invalid or expired token."
+    "invalidAccessToken": "Invalid or expired token.",
+    "userNotFound": "User not found."
   }
 }

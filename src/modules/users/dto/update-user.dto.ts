@@ -2,7 +2,7 @@ import { IsEmail, IsOptional, IsString, IsUrl } from 'class-validator';
 
 export class UpdateUserDto {
   @IsOptional()
-  @IsEmail()
+  @IsEmail({}, { message: 'error.validation.email' })
   email?: string;
 
   @IsOptional()
@@ -10,6 +10,6 @@ export class UpdateUserDto {
   bio?: string;
 
   @IsOptional()
-  @IsUrl()
+  @IsUrl({}, { message: 'error.validation.image' })
   image?: string;
 }

@@ -29,13 +29,13 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   async updateUser(
     @Req() req: AuthenticatedRequest,
-    @Body('user') body: UpdateUserDto,
+    @Body() body: UpdateUserDto,
   ) {
     return this.usersService.updateUser(req.user.sub, body);
   }
 
   @Get('api/profile/:id')
-  async getProfile(@Param('id') id: string) {
-    return this.usersService.findById(Number(id));
+  async getProfile(@Param('id') id: number) {
+    return this.usersService.findByIdOrThrow(id);
   }
 }

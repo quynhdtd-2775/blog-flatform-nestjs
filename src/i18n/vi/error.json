@@ -2,6 +2,7 @@
   "validation": {
     "required": "Trường này là bắt buộc.",
     "email": "Vui lòng nhập địa chỉ email hợp lệ.",
+    "image": "Định dạng hình ảnh không hợp lệ. Các định dạng được phép: jpg, jpeg, png.",
     "minLength": "Trường này phải có ít nhất {min} ký tự.",
     "maxLength": "Trường này phải có nhiều nhất {max} ký tự.",
     "invalidCredentials": "Thông tin đăng nhập không hợp lệ.",
@@ -10,6 +11,7 @@
   "auth": {
     "emailExists": "Email đã tồn tại.",
     "validAccessToken": "Thiếu token truy cập.",
-    "invalidAccessToken": "Token không hợp lệ hoặc đã hết hạn."
+    "invalidAccessToken": "Token không hợp lệ hoặc đã hết hạn.",
+    "userNotFound": "Người dùng không tìm thấy."
   }
 }

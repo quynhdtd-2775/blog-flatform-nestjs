@@ -8,6 +8,7 @@ import { User } from 'src/database/entities/user.entity';
 import { i18n } from 'src/helpers/common';
 import { Repository } from 'typeorm';
 import { UserSerializer, UserViewType } from './user.serializer';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -29,13 +30,27 @@ export class UsersService {
     return this.userRepo.findOne({ where: { id } });
   }
 
+  async findByIdOrThrow(id: number): Promise<User> {
+    const user = await this.userRepo.findOne({
+      where: { id },
+    });
+
+    if (!user) {
+      throw new NotFoundException(i18n()?.t('error.auth.userNotFound'));
+    }
+
+    const { ...safeUser } = user;
+
+    return safeUser;
+  }
+
   async findByEmailOrThrow(email: string): Promise<User> {
     const user = await this.userRepo.findOne({
       where: { email },
     });
 
     if (!user) {
-      throw new NotFoundException(i18n()?.t('error.validation.userNotFound'));
+      throw new NotFoundException(i18n()?.t('error.auth.userNotFound'));
     }
 
     return user;
@@ -57,7 +72,7 @@ export class UsersService {
     };
   }
 
-  async updateUser(userId: number, updateData: Partial<User>) {
+  async updateUser(userId: number, updateData: Partial<UpdateUserDto>) {
     const user = await this.userRepo.findOne({
       where: { id: userId },
     });
@@ -72,9 +87,7 @@ export class UsersService {
       });
 
       if (existedUser) {
-        throw new BadRequestException(
-          i18n()?.t('error.validation.emailAlreadyExists'),
-        );
+        throw new BadRequestException(i18n()?.t('error.auth.emailExists'));
       }
     }
 
