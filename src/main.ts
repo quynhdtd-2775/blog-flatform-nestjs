@@ -25,6 +25,8 @@ async function bootstrap() {
           errors: formatted,
         });
       },
+      transform: true,
+      whitelist: true,
     }),
 
     new I18nValidationPipe({
