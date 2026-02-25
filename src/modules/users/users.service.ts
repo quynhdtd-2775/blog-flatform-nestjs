@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/database/entities/user.entity';
 import { i18n } from 'src/helpers/common';
@@ -50,6 +54,35 @@ export class UsersService {
       user: new UserSerializer(user, {
         type: UserViewType.FULL_INFO,
       }).serialize(),
+    };
+  }
+
+  async updateUser(userId: number, updateData: Partial<User>) {
+    const user = await this.userRepo.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException(i18n()?.t('error.validation.userNotFound'));
+    }
+
+    if (updateData.email && updateData.email !== user.email) {
+      const existedUser = await this.userRepo.findOne({
+        where: { email: updateData.email },
+      });
+
+      if (existedUser) {
+        throw new BadRequestException(
+          i18n()?.t('error.validation.emailAlreadyExists'),
+        );
+      }
+    }
+
+    Object.assign(user, updateData);
+    await this.userRepo.save(user);
+
+    return {
+      success: true,
     };
   }
 }
