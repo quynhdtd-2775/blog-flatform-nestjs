@@ -1,11 +1,12 @@
 import {
-  BadRequestException,
+  HttpException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/database/entities/user.entity';
-import { i18n } from 'src/helpers/common';
+import { checkEmailExists, i18n, loadUser } from 'src/helpers/common';
 import { Repository } from 'typeorm';
 import { UserSerializer, UserViewType } from './user.serializer';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -30,18 +31,14 @@ export class UsersService {
     return this.userRepo.findOne({ where: { id } });
   }
 
-  async findByIdOrThrow(id: number): Promise<User> {
-    const user = await this.userRepo.findOne({
-      where: { id },
-    });
+  async findByIdOrThrow(id: number): Promise<{ user: any }> {
+    const user = await loadUser(this.userRepo, id);
 
-    if (!user) {
-      throw new NotFoundException(i18n()?.t('error.auth.userNotFound'));
-    }
-
-    const { ...safeUser } = user;
-
-    return safeUser;
+    return {
+      user: new UserSerializer(user, {
+        type: UserViewType.FULL_INFO,
+      }).serialize() as UserSerializer,
+    };
   }
 
   async findByEmailOrThrow(email: string): Promise<User> {
@@ -56,46 +53,40 @@ export class UsersService {
     return user;
   }
 
-  async getCurrentUserByIdOrThrow(userId: number) {
-    const user = await this.userRepo.findOne({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      throw new NotFoundException(i18n()?.t('error.validation.userNotFound'));
-    }
+  async getCurrentUserByIdOrThrow(
+    userId: number,
+  ): Promise<{ user: UserSerializer }> {
+    const user = await loadUser(this.userRepo, userId);
 
     return {
       user: new UserSerializer(user, {
         type: UserViewType.FULL_INFO,
-      }).serialize(),
+      }).serialize() as UserSerializer,
     };
   }
 
-  async updateUser(userId: number, updateData: Partial<UpdateUserDto>) {
-    const user = await this.userRepo.findOne({
-      where: { id: userId },
-    });
+  async updateUser(
+    userId: number,
+    updateData: Partial<UpdateUserDto>,
+  ): Promise<{ success: boolean }> {
+    try {
+      const user = await loadUser(this.userRepo, userId);
 
-    if (!user) {
-      throw new NotFoundException(i18n()?.t('error.validation.userNotFound'));
-    }
+      await checkEmailExists(updateData, this.userRepo, user);
 
-    if (updateData.email && updateData.email !== user.email) {
-      const existedUser = await this.userRepo.findOne({
-        where: { email: updateData.email },
-      });
+      Object.assign(user, updateData);
+      await this.userRepo.save(user);
 
-      if (existedUser) {
-        throw new BadRequestException(i18n()?.t('error.auth.emailExists'));
+      return {
+        success: true,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
       }
+      throw new InternalServerErrorException(
+        i18n()?.t('error.updateUser.failed'),
+      );
     }
-
-    Object.assign(user, updateData);
-    await this.userRepo.save(user);
-
-    return {
-      success: true,
-    };
   }
 }

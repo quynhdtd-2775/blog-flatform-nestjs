@@ -13,5 +13,8 @@
     "validAccessToken": "Thiếu token truy cập.",
     "invalidAccessToken": "Token không hợp lệ hoặc đã hết hạn.",
     "userNotFound": "Người dùng không tìm thấy."
-  }
+  },
+  "updateUser": {
+    "failed": "Cập nhật người dùng thất bại"
+  } 
 }
