@@ -13,5 +13,8 @@
     "validAccessToken": "Missing access token.",
     "invalidAccessToken": "Invalid or expired token.",
     "userNotFound": "User not found."
-  }
+  },
+  "updateUser": {
+    "failed": "Failed to update user"
+  } 
 }
