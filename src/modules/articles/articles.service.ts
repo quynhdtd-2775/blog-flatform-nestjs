@@ -1,11 +1,13 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 import { Article } from 'src/database/entities/article.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/database/entities/user.entity';
 import slugify from 'slugify';
+import { GetArticlesQueryDto } from './dto/get-articles-query.dto';
+import { i18n } from 'src/helpers/common';
 
 @Injectable()
 export class ArticlesService {
@@ -14,41 +16,112 @@ export class ArticlesService {
     private readonly articleRepo: Repository<Article>,
   ) {}
 
-  async create(user: User, createArticleDto: CreateArticleDto) {
-    console.log(user);
-    if (!createArticleDto.title) {
-      throw new BadRequestException('Title is required');
-    }
-
-    const slug = slugify(createArticleDto.title, {
-      lower: true,
-      strict: true,
-    });
-
-    const article = this.articleRepo.create({
-      ...createArticleDto,
-      author: {
-        email: user.email,
-      },
-    });
-
-    article.slug = slug;
-    await this.articleRepo.save(article);
-
-    return {
-      success: true,
-      article,
-    };
+  private extractUserId(user: User & { sub?: number }) {
+    return user.id ?? user.sub;
   }
 
-  async findAll() {
-    const articles = await this.articleRepo.find({
-      relations: ['author'],
-    });
-    const result = articles;
+  async create(user: User, createArticleDto: CreateArticleDto) {
+    try {
+      if (!createArticleDto.title) {
+        throw new BadRequestException(i18n()?.t('error.validation.required'));
+      }
 
-    console.log('result: ', result);
-    return articles;
+      const authorId = this.extractUserId(user as User & { sub?: number });
+
+      if (!authorId) {
+        throw new BadRequestException(
+          i18n()?.t('error.validation.invalidUserPayload'),
+        );
+      }
+
+      const slug = slugify(createArticleDto.title, {
+        lower: true,
+        strict: true,
+      });
+
+      const article = this.articleRepo.create({
+        ...createArticleDto,
+        author: {
+          id: authorId,
+        },
+      });
+
+      article.slug = slug;
+      const savedArticle = await this.articleRepo.save(article);
+
+      const articleWithAuthor = await this.articleRepo.findOne({
+        where: { articleId: savedArticle.articleId },
+        relations: ['author'],
+      });
+
+      return {
+        success: true,
+        article: articleWithAuthor
+          ? {
+              ...articleWithAuthor,
+              author: articleWithAuthor.author
+                ? {
+                    email: articleWithAuthor.author.email,
+                  }
+                : null,
+            }
+          : savedArticle,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new BadRequestException(i18n()?.t('error.article.createFailed'));
+    }
+  }
+
+  async findAll(query: GetArticlesQueryDto = {}) {
+    const { tag, author, favorited, limit = 20, offset = 0 } = query;
+
+    const queryBuilder = this.articleRepo
+      .createQueryBuilder('article')
+      .leftJoinAndSelect('article.author', 'author')
+      .orderBy('article.createdAt', 'DESC')
+      .take(limit)
+      .skip(offset);
+
+    if (tag) {
+      queryBuilder.andWhere('article.tagList LIKE :tag', {
+        tag: `%${tag}%`,
+      });
+    }
+
+    if (author) {
+      queryBuilder.andWhere(
+        new Brackets((qb) => {
+          qb.where('author.username = :author', { author }).orWhere(
+            'author.email = :author',
+            { author },
+          );
+        }),
+      );
+    }
+
+    if (favorited) {
+      queryBuilder.andWhere(
+        new Brackets((qb) => {
+          qb.where('article.favorited = :favorited', {
+            favorited: query.favorited,
+          });
+        }),
+      );
+    }
+
+    const articles = await queryBuilder.getMany();
+
+    return articles.map((article) => ({
+      ...article,
+      author: article.author
+        ? {
+            email: article.author.email,
+          }
+        : null,
+    }));
   }
 
   async findOne(id: number) {
@@ -58,12 +131,50 @@ export class ArticlesService {
     return article;
   }
 
-  update(id: number, updateArticleDto: UpdateArticleDto) {
-    console.log(updateArticleDto);
-    return `This action updates a #${id} article`;
+  async loadArticle(id: number) {
+    const article = await this.articleRepo.findOne({
+      where: { articleId: id },
+    });
+
+    if (!article) {
+      throw new BadRequestException(i18n()?.t('error.article.notFound'));
+    }
+
+    return article;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} article`;
+  async update(id: number, updateArticleDto: UpdateArticleDto) {
+    try {
+      await this.loadArticle(id);
+
+      await this.articleRepo.save({
+        articleId: id,
+        ...updateArticleDto,
+      });
+
+      return {
+        success: true,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new BadRequestException(i18n()?.t('error.article.updateFailed'));
+    }
+  }
+
+  async remove(id: number) {
+    try {
+      await this.loadArticle(id);
+      await this.articleRepo.delete(id);
+      return {
+        success: true,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new BadRequestException(i18n()?.t('error.article.deleteFailed'));
+    }
   }
 }

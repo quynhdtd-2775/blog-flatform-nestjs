@@ -8,12 +8,14 @@ import {
   Delete,
   UseGuards,
   Req,
+  Query,
 } from '@nestjs/common';
 import { ArticlesService } from './articles.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { JwtAuthGuard } from '../auth/auth.guard';
 import { User } from 'src/database/entities/user.entity';
+import { GetArticlesQueryDto } from './dto/get-articles-query.dto';
 
 @Controller('articles')
 export class ArticlesController {
@@ -29,8 +31,8 @@ export class ArticlesController {
   }
 
   @Get()
-  async findAll() {
-    return this.articlesService.findAll();
+  async findAll(@Query() query: GetArticlesQueryDto) {
+    return this.articlesService.findAll(query);
   }
 
   @Get(':id')
