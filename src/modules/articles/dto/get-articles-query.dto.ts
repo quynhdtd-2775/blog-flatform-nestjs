@@ -12,7 +12,7 @@ export class GetArticlesQueryDto {
 
   @IsOptional()
   @IsString()
-  favorited?: boolean;
+  favorited?: string;
 
   @IsOptional()
   @Type(() => Number)

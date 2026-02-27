@@ -22,6 +22,15 @@
     "notFound": "Bài viết không tìm thấy.",
     "createFailed": "Tạo bài viết thất bại.",
     "updateFailed": "Cập nhật bài viết thất bại.",
-    "deleteFailed": "Xóa bài viết thất bại."
+    "deleteFailed": "Xóa bài viết thất bại.",
+    "validation": {
+      "titleRequired": "Tiêu đề là bắt buộc.",
+      "descriptionRequired": "Mô tả là bắt buộc.",
+      "bodyRequired": "Nội dung là bắt buộc.",
+      "titleMustString": "Tiêu đề phải là chuỗi.",
+      "descriptionMustString": "Mô tả phải là chuỗi.",
+      "bodyMustString": "Nội dung phải là chuỗi.",
+      "tagListMustBeArray": "Danh sách thẻ phải là một mảng."
+    }
   }
 }

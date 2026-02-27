@@ -1,4 +1,9 @@
-import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { Brackets, Repository } from 'typeorm';
@@ -8,6 +13,7 @@ import { User } from 'src/database/entities/user.entity';
 import slugify from 'slugify';
 import { GetArticlesQueryDto } from './dto/get-articles-query.dto';
 import { i18n } from 'src/helpers/common';
+import { ArticleSerializer, ArticleViewType } from './article.serializer';
 
 @Injectable()
 export class ArticlesService {
@@ -34,7 +40,7 @@ export class ArticlesService {
         );
       }
 
-      const slug = slugify(createArticleDto.title, {
+      const slug = slugify(createArticleDto.title + '-' + Date.now(), {
         lower: true,
         strict: true,
       });
@@ -101,15 +107,10 @@ export class ArticlesService {
         }),
       );
     }
-
-    if (favorited) {
-      queryBuilder.andWhere(
-        new Brackets((qb) => {
-          qb.where('article.favorited = :favorited', {
-            favorited: query.favorited,
-          });
-        }),
-      );
+    if (favorited !== undefined) {
+      queryBuilder.andWhere('article.favorited = :favorited', {
+        favorited,
+      });
     }
 
     const articles = await queryBuilder.getMany();
@@ -128,7 +129,16 @@ export class ArticlesService {
     const article = await this.articleRepo.findOne({
       where: { articleId: id },
     });
-    return article;
+
+    if (!article) {
+      throw new NotFoundException(i18n()?.t('error.article.notFound'));
+    }
+
+    return {
+      article: new ArticleSerializer(article, {
+        type: ArticleViewType.FULL_INFO,
+      }).serialize() as ArticleSerializer,
+    };
   }
 
   async loadArticle(id: number) {
@@ -137,10 +147,14 @@ export class ArticlesService {
     });
 
     if (!article) {
-      throw new BadRequestException(i18n()?.t('error.article.notFound'));
+      throw new NotFoundException(i18n()?.t('error.article.notFound'));
     }
 
-    return article;
+    return {
+      article: new ArticleSerializer(article, {
+        type: ArticleViewType.FULL_INFO,
+      }).serialize() as ArticleSerializer,
+    };
   }
 
   async update(id: number, updateArticleDto: UpdateArticleDto) {

@@ -18,10 +18,10 @@ import { User } from 'src/database/entities/user.entity';
 import { GetArticlesQueryDto } from './dto/get-articles-query.dto';
 
 @Controller('articles')
+@UseGuards(JwtAuthGuard)
 export class ArticlesController {
   constructor(private readonly articlesService: ArticlesService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Post()
   async create(
     @Req() req: { user: User },

@@ -37,13 +37,16 @@ export class Article {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @Column({ default: false })
-  favorited: boolean;
+  @Column({
+    type: 'varchar',
+    default: 'false',
+  })
+  favorited: string;
 
   @Column({ default: 0 })
   favoritesCount: number;
 
   @ManyToOne(() => User, { eager: true })
-  @JoinColumn({ name: 'id' })
+  @JoinColumn({ name: 'authorId' })
   author: User;
 }

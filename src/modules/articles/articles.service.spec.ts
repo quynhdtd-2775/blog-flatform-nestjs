@@ -7,6 +7,7 @@ import { Article } from 'src/database/entities/article.entity';
 import { User } from 'src/database/entities/user.entity';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
+import { ArticleSerializer } from './article.serializer';
 
 describe('ArticlesService', () => {
   let service: ArticlesService;
@@ -148,7 +149,7 @@ describe('ArticlesService', () => {
       const result = await service.findAll({
         tag: 'nestjs',
         author: 'u1',
-        favorited: true,
+        favorited: 'false',
         limit: 5,
         offset: 2,
       });
@@ -210,8 +211,14 @@ describe('ArticlesService', () => {
 
   describe('update', () => {
     it('updates existing article', async () => {
-      const dto: UpdateArticleDto = { title: 'updated title' };
-      jest.spyOn(service, 'loadArticle').mockResolvedValue({} as Article);
+      const dto: UpdateArticleDto = {
+        title: 'updated title',
+        description: '',
+        body: '',
+      };
+      jest
+        .spyOn(service, 'loadArticle')
+        .mockResolvedValue({ article: {} as ArticleSerializer });
       (articleRepo.save as jest.Mock).mockResolvedValue({});
 
       const result = await service.update(5, dto);
@@ -223,18 +230,26 @@ describe('ArticlesService', () => {
     });
 
     it('throws mapped error when save fails', async () => {
-      jest.spyOn(service, 'loadArticle').mockResolvedValue({} as Article);
+      jest
+        .spyOn(service, 'loadArticle')
+        .mockResolvedValue({ article: {} as ArticleSerializer });
       (articleRepo.save as jest.Mock).mockRejectedValue(new Error('db fail'));
 
-      await expect(service.update(5, { title: 'new' })).rejects.toBeInstanceOf(
-        BadRequestException,
-      );
+      await expect(
+        service.update(5, {
+          title: 'new',
+          description: '',
+          body: '',
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
     });
   });
 
   describe('remove', () => {
     it('removes existing article', async () => {
-      jest.spyOn(service, 'loadArticle').mockResolvedValue({} as Article);
+      jest
+        .spyOn(service, 'loadArticle')
+        .mockResolvedValue({ article: {} as ArticleSerializer });
       (articleRepo.delete as jest.Mock).mockResolvedValue({});
 
       const result = await service.remove(3);
@@ -246,7 +261,9 @@ describe('ArticlesService', () => {
     });
 
     it('throws mapped error when delete fails', async () => {
-      jest.spyOn(service, 'loadArticle').mockResolvedValue({} as Article);
+      jest
+        .spyOn(service, 'loadArticle')
+        .mockResolvedValue({ article: {} as ArticleSerializer });
       (articleRepo.delete as jest.Mock).mockRejectedValue(new Error('db fail'));
 
       await expect(service.remove(3)).rejects.toBeInstanceOf(
