@@ -32,5 +32,10 @@
       "bodyMustString": "Body must be a string.",
       "tagListMustBeArray": "Tag list must be an array."
     }
+  },
+  "comment": {
+    "notFound": "Comment not found.",
+    "createFailed": "Failed to create comment.",
+    "deleteFailed": "Failed to delete comment."
   }
 }

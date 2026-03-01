@@ -191,4 +191,15 @@ export class ArticlesService {
       throw new BadRequestException(i18n()?.t('error.article.deleteFailed'));
     }
   }
+
+  async findAllTags() {
+    const articles = await this.articleRepo.find();
+
+    const tags = articles.flatMap((article) => article.tagList || []);
+
+    // remove duplicates
+    const uniqueTags = [...new Set(tags)];
+
+    return uniqueTags;
+  }
 }
