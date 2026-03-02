@@ -6,7 +6,8 @@
     "minLength": "This field must be at least {min} characters long.",
     "maxLength": "This field must be no more than {max} characters long.",
     "invalidCredentials": "Invalid credentials.",
-    "userNotFound": "User not found."
+    "userNotFound": "User not found.",
+    "invalidUserPayload": "Invalid user payload."
   },
   "auth": {
     "emailExists": "Email already exists.",
@@ -16,5 +17,23 @@
   },
   "updateUser": {
     "failed": "Failed to update user"
-  } 
+  },
+  "article": {
+    "notFound": "Article not found.",
+    "createFailed": "Failed to create article.",
+    "updateFailed": "Failed to update article.",
+    "deleteFailed": "Failed to delete article.",
+    "validation": {
+      "titleRequired": "Title is required.",
+      "descriptionRequired": "Description is required.",
+      "bodyRequired": "Body is required.",
+      "titleMustString": "Title must be a string.",
+      "descriptionMustString": "Description must be a string.",
+      "bodyMustString": "Body must be a string.",
+      "tagListMustBeArray": "Tag list must be an array.",
+      "titleMaxLength": "Title must be no more than 50 characters long.",
+      "descriptionMaxLength": "Description must be no more than 500 characters long.",
+      "bodyMaxLength": "Body must be no more than 500 characters long."
+    }
+  }
 }
