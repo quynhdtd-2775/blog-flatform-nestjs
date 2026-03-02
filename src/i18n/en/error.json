@@ -30,7 +30,10 @@
       "titleMustString": "Title must be a string.",
       "descriptionMustString": "Description must be a string.",
       "bodyMustString": "Body must be a string.",
-      "tagListMustBeArray": "Tag list must be an array."
+      "tagListMustBeArray": "Tag list must be an array.",
+      "titleMaxLength": "Title must be no more than 50 characters long.",
+      "descriptionMaxLength": "Description must be no more than 500 characters long.",
+      "bodyMaxLength": "Body must be no more than 500 characters long."
     }
   }
 }

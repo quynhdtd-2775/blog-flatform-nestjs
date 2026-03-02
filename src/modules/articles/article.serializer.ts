@@ -24,11 +24,18 @@ export class ArticleSerializer {
     private readonly options: { type: ArticleViewType },
   ) {}
 
-  serialize(): Partial<Article> {
+  serialize(): Partial<Article> & { author: { email: string } | null } {
     const fields = ArticleSerializer.FIELD_MAP[this.options.type];
 
-    return Object.fromEntries(
+    const articleData = Object.fromEntries(
       fields.map((field) => [field, this.article[field]]),
     ) as Partial<Article>;
+
+    const result = {
+      ...articleData,
+      author: articleData.author ? { email: articleData.author.email } : null,
+    } as Partial<Article> & { author: { email: string } | null };
+
+    return result;
   }
 }

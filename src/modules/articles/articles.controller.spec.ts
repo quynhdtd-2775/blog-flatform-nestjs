@@ -92,7 +92,11 @@ describe('ArticlesController', () => {
   });
 
   it('update converts id and delegates dto', async () => {
-    const dto: UpdateArticleDto = { title: 'updated' };
+    const dto: UpdateArticleDto = {
+      title: 'updated',
+      description: '',
+      body: '',
+    };
     const expected = { success: true };
     service.update.mockResolvedValue(expected);
 
