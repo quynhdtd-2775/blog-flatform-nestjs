@@ -32,5 +32,10 @@
       "bodyMustString": "Nội dung phải là chuỗi.",
       "tagListMustBeArray": "Danh sách thẻ phải là một mảng."
     }
+  },
+  "comment": {
+    "notFound": "Bình luận không tìm thấy.",
+    "createFailed": "Tạo bình luận thất bại.",
+    "deleteFailed": "Xóa bình luận thất bại."
   }
 }

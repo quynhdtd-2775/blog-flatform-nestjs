@@ -35,6 +35,13 @@ export class ArticlesController {
     return this.articlesService.findAll(query);
   }
 
+  @Get('tags')
+  async findByTag() {
+    const tags = await this.articlesService.findAllTags();
+
+    return { tags };
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.articlesService.findOne(+id);
