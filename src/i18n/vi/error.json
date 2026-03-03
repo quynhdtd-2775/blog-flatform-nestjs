@@ -6,7 +6,8 @@
     "minLength": "Trường này phải có ít nhất {min} ký tự.",
     "maxLength": "Trường này phải có nhiều nhất {max} ký tự.",
     "invalidCredentials": "Thông tin đăng nhập không hợp lệ.",
-    "userNotFound": "Người dùng không tìm thấy."
+    "userNotFound": "Người dùng không tìm thấy.",
+    "invalidUserPayload": "Dữ liệu người dùng không hợp lệ."
   },
   "auth": {
     "emailExists": "Email đã tồn tại.",
@@ -16,5 +17,23 @@
   },
   "updateUser": {
     "failed": "Cập nhật người dùng thất bại"
-  } 
+  },
+  "article": {
+    "notFound": "Bài viết không tìm thấy.",
+    "createFailed": "Tạo bài viết thất bại.",
+    "updateFailed": "Cập nhật bài viết thất bại.",
+    "deleteFailed": "Xóa bài viết thất bại.",
+    "validation": {
+      "titleRequired": "Tiêu đề là bắt buộc.",
+      "descriptionRequired": "Mô tả là bắt buộc.",
+      "bodyRequired": "Nội dung là bắt buộc.",
+      "titleMustString": "Tiêu đề phải là chuỗi.",
+      "descriptionMustString": "Mô tả phải là chuỗi.",
+      "bodyMustString": "Nội dung phải là chuỗi.",
+      "tagListMustBeArray": "Danh sách thẻ phải là một mảng.",
+      "titleMaxLength": "Tiêu đề phải có nhiều nhất 50 ký tự.",
+      "descriptionMaxLength": "Mô tả phải có nhiều nhất 500 ký tự.",
+      "bodyMaxLength": "Nội dung phải có nhiều nhất 500 ký tự."
+    }
+  }
 }

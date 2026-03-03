@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { UsersModule } from './modules/users/users.module';
 import { dataSource } from './configs/typeorm.config';
 import { I18nModule, AcceptLanguageResolver } from 'nestjs-i18n';
+import { ArticlesModule } from './modules/articles/articles.module';
 import * as path from 'path';
 
 @Module({
@@ -30,6 +31,7 @@ import * as path from 'path';
     }),
     AuthModule,
     UsersModule,
+    ArticlesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
