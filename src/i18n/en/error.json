@@ -35,5 +35,10 @@
       "descriptionMaxLength": "Description must be no more than 500 characters long.",
       "bodyMaxLength": "Body must be no more than 500 characters long."
     }
+  },
+  "comment": {
+    "notFound": "Comment not found.",
+    "createFailed": "Failed to create comment.",
+    "deleteFailed": "Failed to delete comment."
   }
 }

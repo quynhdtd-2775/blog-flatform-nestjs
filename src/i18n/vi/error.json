@@ -35,5 +35,10 @@
       "descriptionMaxLength": "Mô tả phải có nhiều nhất 500 ký tự.",
       "bodyMaxLength": "Nội dung phải có nhiều nhất 500 ký tự."
     }
+  },
+  "comment": {
+    "notFound": "Bình luận không tìm thấy.",
+    "createFailed": "Tạo bình luận thất bại.",
+    "deleteFailed": "Xóa bình luận thất bại."
   }
 }

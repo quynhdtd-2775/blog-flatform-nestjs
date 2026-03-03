@@ -5,10 +5,12 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from './user.entity';
+import { Comment } from './comment.entity';
 
 @Entity('articles')
 export class Article {
@@ -49,4 +51,7 @@ export class Article {
   @ManyToOne(() => User, { eager: true })
   @JoinColumn({ name: 'authorId' })
   author: User;
+
+  @OneToMany(() => Comment, (comment: Comment) => comment.article)
+  comments: Comment[];
 }
