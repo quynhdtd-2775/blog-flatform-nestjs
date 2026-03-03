@@ -27,24 +27,18 @@ export class ArticlesService {
   }
 
   async create(user: User, createArticleDto: CreateArticleDto) {
+    if (!createArticleDto.title) {
+      throw new BadRequestException(i18n()?.t('error.validation.required'));
+    }
+
+    const authorId = this.extractUserId(user as User & { sub?: number });
+
+    const slug = slugify(createArticleDto.title + '-' + Date.now(), {
+      lower: true,
+      strict: true,
+    });
+
     try {
-      if (!createArticleDto.title) {
-        throw new BadRequestException(i18n()?.t('error.validation.required'));
-      }
-
-      const authorId = this.extractUserId(user as User & { sub?: number });
-
-      if (!authorId) {
-        throw new BadRequestException(
-          i18n()?.t('error.validation.invalidUserPayload'),
-        );
-      }
-
-      const slug = slugify(createArticleDto.title + '-' + Date.now(), {
-        lower: true,
-        strict: true,
-      });
-
       const article = this.articleRepo.create({
         ...createArticleDto,
         author: {
@@ -60,18 +54,15 @@ export class ArticlesService {
         relations: ['author'],
       });
 
+      if (!articleWithAuthor) {
+        throw new BadRequestException(i18n()?.t('error.article.notFound'));
+      }
+
       return {
         success: true,
-        article: articleWithAuthor
-          ? {
-              ...articleWithAuthor,
-              author: articleWithAuthor.author
-                ? {
-                    email: articleWithAuthor.author.email,
-                  }
-                : null,
-            }
-          : savedArticle,
+        article: new ArticleSerializer(articleWithAuthor, {
+          type: ArticleViewType.FULL_INFO,
+        }).serialize(),
       };
     } catch (error) {
       if (error instanceof HttpException) {
@@ -82,14 +73,14 @@ export class ArticlesService {
   }
 
   async findAll(query: GetArticlesQueryDto = {}) {
-    const { tag, author, favorited, limit = 20, offset = 0 } = query;
+    const { tag, author, favorited, page = 2 } = query;
+
+    const ITEMS_PER_PAGE = 2;
 
     const queryBuilder = this.articleRepo
       .createQueryBuilder('article')
       .leftJoinAndSelect('article.author', 'author')
-      .orderBy('article.createdAt', 'DESC')
-      .take(limit)
-      .skip(offset);
+      .orderBy('article.createdAt', 'DESC');
 
     if (tag) {
       queryBuilder.andWhere('article.tagList LIKE :tag', {
@@ -107,22 +98,32 @@ export class ArticlesService {
         }),
       );
     }
+
     if (favorited !== undefined) {
       queryBuilder.andWhere('article.favorited = :favorited', {
         favorited,
       });
     }
 
-    const articles = await queryBuilder.getMany();
+    const skip = (page - 1) * ITEMS_PER_PAGE;
 
-    return articles.map((article) => ({
-      ...article,
-      author: article.author
-        ? {
-            email: article.author.email,
-          }
-        : null,
-    }));
+    queryBuilder.take(ITEMS_PER_PAGE).skip(skip);
+
+    const [articles, total] = await queryBuilder.getManyAndCount();
+
+    return {
+      articles: articles.map((article) =>
+        new ArticleSerializer(article, {
+          type: ArticleViewType.FULL_INFO,
+        }).serialize(),
+      ),
+
+      page: {
+        total,
+        page,
+        items: ITEMS_PER_PAGE,
+      },
+    };
   }
 
   async findOne(id: number) {
@@ -137,7 +138,7 @@ export class ArticlesService {
     return {
       article: new ArticleSerializer(article, {
         type: ArticleViewType.FULL_INFO,
-      }).serialize() as ArticleSerializer,
+      }).serialize(),
     };
   }
 
@@ -153,14 +154,14 @@ export class ArticlesService {
     return {
       article: new ArticleSerializer(article, {
         type: ArticleViewType.FULL_INFO,
-      }).serialize() as ArticleSerializer,
+      }).serialize(),
     };
   }
 
   async update(id: number, updateArticleDto: UpdateArticleDto) {
-    try {
-      await this.loadArticle(id);
+    await this.loadArticle(id);
 
+    try {
       await this.articleRepo.save({
         articleId: id,
         ...updateArticleDto,

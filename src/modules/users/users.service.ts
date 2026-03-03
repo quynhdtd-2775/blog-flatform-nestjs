@@ -69,12 +69,12 @@ export class UsersService {
     userId: number,
     updateData: Partial<UpdateUserDto>,
   ): Promise<{ success: boolean }> {
+    const user = await loadUser(this.userRepo, userId);
+
+    await checkEmailExists(updateData, this.userRepo, user);
+
+    Object.assign(user, updateData);
     try {
-      const user = await loadUser(this.userRepo, userId);
-
-      await checkEmailExists(updateData, this.userRepo, user);
-
-      Object.assign(user, updateData);
       await this.userRepo.save(user);
 
       return {
