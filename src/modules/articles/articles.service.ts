@@ -91,7 +91,7 @@ export class ArticlesService {
     if (author) {
       queryBuilder.andWhere(
         new Brackets((qb) => {
-          qb.where('author.username = :author', { author }).orWhere(
+          qb.where('author.name = :author', { author }).orWhere(
             'author.email = :author',
             { author },
           );

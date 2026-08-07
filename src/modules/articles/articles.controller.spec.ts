@@ -6,6 +6,7 @@ import { UpdateArticleDto } from './dto/update-article.dto';
 import { JwtAuthGuard } from '../auth/auth.guard';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { RedisService } from '../redis/redis.service';
 
 describe('ArticlesController', () => {
   let controller: ArticlesController;
@@ -44,6 +45,10 @@ describe('ArticlesController', () => {
         {
           provide: ConfigService,
           useValue: { get: jest.fn() },
+        },
+        {
+          provide: RedisService,
+          useValue: { exists: jest.fn(), setWithTtl: jest.fn() },
         },
       ],
     }).compile();

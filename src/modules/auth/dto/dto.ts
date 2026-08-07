@@ -8,6 +8,9 @@ export class SignupDto {
   @IsNotEmpty({ message: 'error.validation.required' })
   @MinLength(6, { message: 'error.validation.minLength', context: { min: 6 } })
   password: string;
+
+  @IsNotEmpty({ message: 'error.validation.required' })
+  name: string;
 }
 
 export class LoginDto {

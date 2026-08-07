@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from 'src/database/entities/user.entity';
+import { User, UserRole } from 'src/database/entities/user.entity';
 import { checkEmailExists, i18n, loadUser } from 'src/helpers/common';
 import { Repository } from 'typeorm';
 import { UserSerializer, UserViewType } from './user.serializer';
@@ -18,8 +18,13 @@ export class UsersService {
     private userRepo: Repository<User>,
   ) {}
 
-  createUser(email: string, password: string): Promise<User> {
-    const user = this.userRepo.create({ email, password });
+  createUser(
+    email: string,
+    password: string,
+    name: string,
+    role: UserRole = UserRole.USER,
+  ): Promise<User> {
+    const user = this.userRepo.create({ email, password, name, role });
     return this.userRepo.save(user);
   }
 

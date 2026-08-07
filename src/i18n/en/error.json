@@ -18,6 +18,21 @@
   "updateUser": {
     "failed": "Failed to update user"
   },
+  "book": {
+    "notFound": "Book not found."
+  },
+  "author": {
+    "notFound": "Author not found."
+  },
+  "borrowRequest": {
+    "notFound": "Borrow request not found.",
+    "invalidDateRange": "fromDate must be a valid date before toDate.",
+    "bookNotFound": "One or more requested books do not exist.",
+    "invalidQuantity": "Quantity must be greater than zero.",
+    "notAvailable": "The requested books are not available for the selected period.",
+    "forbidden": "You cannot access or modify this borrow request.",
+    "onlyPendingCancellable": "Only pending borrow requests can be cancelled."
+  },
   "article": {
     "notFound": "Article not found.",
     "createFailed": "Failed to create article.",

@@ -1,4 +1,4 @@
-import { IsEmail, IsOptional, IsString, IsUrl } from 'class-validator';
+import { IsEmail, IsOptional, IsString } from 'class-validator';
 
 export class UpdateUserDto {
   @IsOptional()
@@ -7,9 +7,5 @@ export class UpdateUserDto {
 
   @IsOptional()
   @IsString()
-  bio?: string;
-
-  @IsOptional()
-  @IsUrl({}, { message: 'error.validation.image' })
-  image?: string;
+  name?: string;
 }

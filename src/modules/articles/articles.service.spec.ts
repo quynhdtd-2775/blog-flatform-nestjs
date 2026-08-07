@@ -74,7 +74,7 @@ describe('ArticlesService', () => {
       (articleRepo.save as jest.Mock).mockResolvedValue(savedArticle);
       (articleRepo.findOne as jest.Mock).mockResolvedValue({
         ...savedArticle,
-        author: { id: 1, email: 'author@mail.com', username: 'author' },
+        author: { id: 1, email: 'author@mail.com', name: 'author' },
       });
 
       const result = await service.create(user, dto);
@@ -142,7 +142,7 @@ describe('ArticlesService', () => {
         {
           articleId: 1,
           title: 'A',
-          author: { id: 10, email: 'a@mail.com', username: 'u1' },
+          author: { id: 10, email: 'a@mail.com', name: 'u1' },
         },
       ]);
 
