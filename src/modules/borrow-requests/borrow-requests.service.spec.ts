@@ -140,7 +140,7 @@ describe('BorrowRequestsService', () => {
       ).rejects.toBeInstanceOf(BadRequestException);
     });
 
-    it('creates a PENDING request with all books when availability allows it', async () => {
+    it('creates a NEW request with all books when availability allows it', async () => {
       (bookRepo.find as jest.Mock).mockResolvedValue([
         { id: 1, totalQuantity: 5 } as Book,
         { id: 2, totalQuantity: 3 } as Book,
@@ -161,7 +161,7 @@ describe('BorrowRequestsService', () => {
         id: 100,
         fromDate: baseDto.fromDate,
         toDate: baseDto.toDate,
-        status: BorrowRequestStatus.PENDING,
+        status: BorrowRequestStatus.NEW,
         rejectReason: null,
         user: { id: 1 },
       });
@@ -180,12 +180,12 @@ describe('BorrowRequestsService', () => {
 
       const result = await service.create(1, dto);
 
-      expect(result.status).toBe(BorrowRequestStatus.PENDING);
+      expect(result.status).toBe(BorrowRequestStatus.NEW);
       expect(result.books).toHaveLength(2);
       expect(borrowRequestRepo.manager.transaction).toHaveBeenCalledTimes(1);
     });
 
-    it('only counts PENDING/APPROVED requests as active reservations (never CANCELLED/REJECTED)', async () => {
+    it('only counts NEW/PENDING/APPROVED requests as active reservations (never CANCELLED/REJECTED)', async () => {
       (bookRepo.find as jest.Mock).mockResolvedValue([
         { id: 1, totalQuantity: 5 } as Book,
       ]);
@@ -204,7 +204,7 @@ describe('BorrowRequestsService', () => {
         id: 101,
         fromDate: baseDto.fromDate,
         toDate: baseDto.toDate,
-        status: BorrowRequestStatus.PENDING,
+        status: BorrowRequestStatus.NEW,
         rejectReason: null,
         user: { id: 1 },
       });
@@ -218,7 +218,11 @@ describe('BorrowRequestsService', () => {
       expect(availabilityQb.andWhere).toHaveBeenCalledWith(
         'br.status IN (:...statuses)',
         {
-          statuses: [BorrowRequestStatus.PENDING, BorrowRequestStatus.APPROVED],
+          statuses: [
+            BorrowRequestStatus.NEW,
+            BorrowRequestStatus.PENDING,
+            BorrowRequestStatus.APPROVED,
+          ],
         },
       );
     });
@@ -266,20 +270,26 @@ describe('BorrowRequestsService', () => {
   });
 
   describe('cancel', () => {
-    it('cancels the caller own PENDING request', async () => {
-      (borrowRequestRepo.findOne as jest.Mock).mockResolvedValue({
-        id: 1,
-        status: BorrowRequestStatus.PENDING,
-        user: { id: 1 },
-      });
-      (borrowRequestRepo.save as jest.Mock).mockImplementation(
-        (entity: unknown) => Promise.resolve(entity),
-      );
+    it.each([BorrowRequestStatus.NEW, BorrowRequestStatus.PENDING])(
+      'cancels the caller own %s request',
+      async (status) => {
+        (borrowRequestRepo.findOne as jest.Mock).mockResolvedValue({
+          id: 1,
+          status,
+          user: { id: 1 },
+        });
+        (borrowRequestRepo.save as jest.Mock).mockImplementation(
+          (entity: unknown) => Promise.resolve(entity),
+        );
 
-      const result = await service.cancel(1, 1);
+        const result = await service.cancel(1, 1);
 
-      expect(result).toEqual({ id: 1, status: BorrowRequestStatus.CANCELLED });
-    });
+        expect(result).toEqual({
+          id: 1,
+          status: BorrowRequestStatus.CANCELLED,
+        });
+      },
+    );
 
     it('throws NotFoundException when the request does not exist', async () => {
       (borrowRequestRepo.findOne as jest.Mock).mockResolvedValue(null);

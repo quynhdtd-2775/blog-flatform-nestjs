@@ -4,10 +4,10 @@ import { AuthorsService } from './authors.service';
 
 describe('AuthorsController', () => {
   let controller: AuthorsController;
-  let service: { findOne: jest.Mock };
+  let service: { findAll: jest.Mock; findOne: jest.Mock };
 
   beforeEach(async () => {
-    service = { findOne: jest.fn() };
+    service = { findAll: jest.fn(), findOne: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthorsController],
@@ -19,6 +19,12 @@ describe('AuthorsController', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  it('delegates list queries to the service', async () => {
+    const query = { page: 1, limit: 10 };
+    await controller.findAll(query);
+    expect(service.findAll).toHaveBeenCalledWith(query);
   });
 
   it('delegates detail lookups to the service', async () => {

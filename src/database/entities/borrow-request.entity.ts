@@ -11,6 +11,7 @@ import { User } from './user.entity';
 import { BorrowRequestBook } from './borrow-request-book.entity';
 
 export enum BorrowRequestStatus {
+  NEW = 'NEW',
   PENDING = 'PENDING',
   APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',

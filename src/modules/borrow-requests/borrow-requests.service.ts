@@ -18,8 +18,14 @@ import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import { CreateBorrowRequestDto } from './dto/create-borrow-request.dto';
 
 const ACTIVE_RESERVATION_STATUSES = [
+  BorrowRequestStatus.NEW,
   BorrowRequestStatus.PENDING,
   BorrowRequestStatus.APPROVED,
+];
+
+const CANCELLABLE_STATUSES = [
+  BorrowRequestStatus.NEW,
+  BorrowRequestStatus.PENDING,
 ];
 
 export interface BorrowRequestBookView {
@@ -91,7 +97,7 @@ export class BorrowRequestsService {
           user: { id: userId },
           fromDate: dto.fromDate,
           toDate: dto.toDate,
-          status: BorrowRequestStatus.PENDING,
+          status: BorrowRequestStatus.NEW,
         });
 
         const saved = await manager.save(BorrowRequest, borrowRequest);
@@ -258,7 +264,7 @@ export class BorrowRequestsService {
       throw new ForbiddenException(i18n()?.t('error.borrowRequest.forbidden'));
     }
 
-    if (request.status !== BorrowRequestStatus.PENDING) {
+    if (!CANCELLABLE_STATUSES.includes(request.status)) {
       throw new BadRequestException(
         i18n()?.t('error.borrowRequest.onlyPendingCancellable'),
       );

@@ -1,17 +1,14 @@
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 import { BorrowRequest } from './borrow-request.entity';
 import { Book } from './book.entity';
 
 @Entity('borrow_request_books')
 export class BorrowRequestBook {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryColumn({ name: 'borrow_request_id' })
+  borrowRequestId: number;
+
+  @PrimaryColumn({ name: 'book_id' })
+  bookId: number;
 
   @ManyToOne(() => BorrowRequest, (request) => request.books, {
     onDelete: 'CASCADE',

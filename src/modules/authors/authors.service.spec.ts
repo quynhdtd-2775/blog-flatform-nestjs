@@ -11,8 +11,16 @@ describe('AuthorsService', () => {
   let authorRepo: jest.Mocked<Partial<Repository<Author>>>;
   let bookRepo: jest.Mocked<Partial<Repository<Book>>>;
 
+  const createMockQueryBuilder = () => ({
+    orderBy: jest.fn().mockReturnThis(),
+    andWhere: jest.fn().mockReturnThis(),
+    take: jest.fn().mockReturnThis(),
+    skip: jest.fn().mockReturnThis(),
+    getManyAndCount: jest.fn(),
+  });
+
   beforeEach(async () => {
-    authorRepo = { findOne: jest.fn() };
+    authorRepo = { findOne: jest.fn(), createQueryBuilder: jest.fn() };
     bookRepo = { find: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -28,6 +36,42 @@ describe('AuthorsService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  describe('findAll', () => {
+    it('returns paginated authors with meta', async () => {
+      const qb = createMockQueryBuilder();
+      qb.getManyAndCount.mockResolvedValue([
+        [{ id: 1, name: 'Robert C. Martin', bio: 'Author of Clean Code' }],
+        1,
+      ]);
+      (authorRepo.createQueryBuilder as jest.Mock).mockReturnValue(qb);
+
+      const result = await service.findAll({ page: 1, limit: 10 });
+
+      expect(result.data).toEqual([
+        { id: 1, name: 'Robert C. Martin', bio: 'Author of Clean Code' },
+      ]);
+      expect(result.meta).toEqual({
+        page: 1,
+        limit: 10,
+        total: 1,
+        totalPages: 1,
+      });
+    });
+
+    it('applies the search filter when provided', async () => {
+      const qb = createMockQueryBuilder();
+      qb.getManyAndCount.mockResolvedValue([[], 0]);
+      (authorRepo.createQueryBuilder as jest.Mock).mockReturnValue(qb);
+
+      await service.findAll({ page: 1, limit: 10, search: 'martin' });
+
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        'author.name ILIKE :search',
+        expect.objectContaining({ search: '%martin%' }),
+      );
+    });
   });
 
   it('returns the author with their books', async () => {
