@@ -60,16 +60,16 @@ describe('AuthorsService', () => {
       });
     });
 
-    it('applies the search filter when provided', async () => {
+    it('applies the keyword filter when provided', async () => {
       const qb = createMockQueryBuilder();
       qb.getManyAndCount.mockResolvedValue([[], 0]);
       (authorRepo.createQueryBuilder as jest.Mock).mockReturnValue(qb);
 
-      await service.findAll({ page: 1, limit: 10, search: 'martin' });
+      await service.findAll({ page: 1, limit: 10, keyword: 'martin' });
 
       expect(qb.andWhere).toHaveBeenCalledWith(
-        'author.name ILIKE :search',
-        expect.objectContaining({ search: '%martin%' }),
+        'author.name ILIKE :keyword',
+        expect.objectContaining({ keyword: '%martin%' }),
       );
     });
   });

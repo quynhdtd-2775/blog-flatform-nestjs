@@ -18,23 +18,23 @@ export enum UserStatus {
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({ unique: true })
-  email: string;
+  email!: string;
 
   @Column()
-  password: string;
+  password!: string;
 
   @Column()
-  name: string;
+  name!: string;
 
   @Column({ type: 'varchar', default: UserRole.USER })
-  role: UserRole;
+  role!: UserRole;
 
   @Column({ type: 'varchar', default: UserStatus.ACTIVE })
-  status: UserStatus;
+  status!: UserStatus;
 
   @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
+  createdAt!: Date;
 }

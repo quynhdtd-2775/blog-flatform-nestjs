@@ -12,29 +12,29 @@ import { Category } from './category.entity';
 @Entity('books')
 export class Book {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  title: string;
+  title!: string;
 
   @Column({ type: 'text', nullable: true })
-  description: string | null;
+  description!: string | null;
 
   @ManyToOne(() => Author)
   @JoinColumn({ name: 'author_id' })
-  author: Author;
+  author!: Author;
 
   @ManyToOne(() => Publisher)
   @JoinColumn({ name: 'publisher_id' })
-  publisher: Publisher;
+  publisher!: Publisher;
 
   @ManyToOne(() => Category)
   @JoinColumn({ name: 'category_id' })
-  category: Category;
+  category!: Category;
 
   @Column({ name: 'total_quantity', type: 'int', default: 0 })
-  totalQuantity: number;
+  totalQuantity!: number;
 
   @Column({ name: 'available_quantity', type: 'int', default: 0 })
-  availableQuantity: number;
+  availableQuantity!: number;
 }

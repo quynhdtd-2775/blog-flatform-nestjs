@@ -21,29 +21,29 @@ export enum BorrowRequestStatus {
 @Entity('borrow_requests')
 export class BorrowRequest {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user!: User;
 
   @Column({ name: 'from_date', type: 'date' })
-  fromDate: string;
+  fromDate!: string;
 
   @Column({ name: 'to_date', type: 'date' })
-  toDate: string;
+  toDate!: string;
 
   @Column({ type: 'varchar', default: BorrowRequestStatus.PENDING })
-  status: BorrowRequestStatus;
+  status!: BorrowRequestStatus;
 
   @Column({ name: 'reject_reason', type: 'varchar', nullable: true })
-  rejectReason: string | null;
+  rejectReason!: string | null;
 
   @OneToMany(() => BorrowRequestBook, (item) => item.borrowRequest, {
     cascade: true,
   })
-  books: BorrowRequestBook[];
+  books!: BorrowRequestBook[];
 
   @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
+  createdAt!: Date;
 }

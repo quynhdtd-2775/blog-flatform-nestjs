@@ -15,7 +15,10 @@ import type { AuthenticatedUser } from '../auth/current-user.decorator';
 import { BorrowRequestsService } from './borrow-requests.service';
 import { CreateBorrowRequestDto } from './dto/create-borrow-request.dto';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Borrow Requests')
+@ApiBearerAuth()
 @Controller('borrow-requests')
 @UseGuards(JwtAuthGuard)
 export class BorrowRequestsController {

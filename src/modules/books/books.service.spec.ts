@@ -71,17 +71,41 @@ describe('BooksService', () => {
       });
     });
 
-    it('applies the search filter when provided', async () => {
+    it('applies the keyword filter when provided', async () => {
       const qb = createMockQueryBuilder();
       qb.getManyAndCount.mockResolvedValue([[], 0]);
       (bookRepo.createQueryBuilder as jest.Mock).mockReturnValue(qb);
 
-      await service.findAll({ page: 1, limit: 10, search: 'clean' });
+      await service.findAll({ page: 1, limit: 10, keyword: 'clean' });
 
       expect(qb.andWhere).toHaveBeenCalledWith(
-        'book.title ILIKE :search',
-        expect.objectContaining({ search: '%clean%' }),
+        'book.title ILIKE :keyword',
+        expect.objectContaining({ keyword: '%clean%' }),
       );
+    });
+
+    it('applies the author_id filter when provided', async () => {
+      const qb = createMockQueryBuilder();
+      qb.getManyAndCount.mockResolvedValue([[], 0]);
+      (bookRepo.createQueryBuilder as jest.Mock).mockReturnValue(qb);
+
+      await service.findAll({ page: 1, limit: 10, author_id: 1 });
+
+      expect(qb.andWhere).toHaveBeenCalledWith('author.id = :authorId', {
+        authorId: 1,
+      });
+    });
+
+    it('applies the category_id filter when provided', async () => {
+      const qb = createMockQueryBuilder();
+      qb.getManyAndCount.mockResolvedValue([[], 0]);
+      (bookRepo.createQueryBuilder as jest.Mock).mockReturnValue(qb);
+
+      await service.findAll({ page: 1, limit: 10, category_id: 1 });
+
+      expect(qb.andWhere).toHaveBeenCalledWith('category.id = :categoryId', {
+        categoryId: 1,
+      });
     });
   });
 

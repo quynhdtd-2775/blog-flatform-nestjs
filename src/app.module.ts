@@ -13,6 +13,8 @@ import { RedisModule } from './modules/redis/redis.module';
 import { BooksModule } from './modules/books/books.module';
 import { AuthorsModule } from './modules/authors/authors.module';
 import { BorrowRequestsModule } from './modules/borrow-requests/borrow-requests.module';
+import { CategoriesModule } from './modules/categories/categories.module';
+import { PublishersModule } from './modules/publishers/publishers.module';
 import * as path from 'path';
 
 @Module({
@@ -42,6 +44,8 @@ import * as path from 'path';
     BooksModule,
     AuthorsModule,
     BorrowRequestsModule,
+    CategoriesModule,
+    PublishersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

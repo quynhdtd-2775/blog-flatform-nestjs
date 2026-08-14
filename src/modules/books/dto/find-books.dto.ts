@@ -5,15 +5,15 @@ import { PaginationQueryDto } from '../../../common/dto/pagination-query.dto';
 export class FindBooksDto extends PaginationQueryDto {
   @IsOptional()
   @IsString()
-  search?: string;
+  keyword?: string;
 
   @IsOptional()
   @Type(() => Number)
   @IsInt()
-  authorId?: number;
+  author_id?: number;
 
   @IsOptional()
   @Type(() => Number)
   @IsInt()
-  categoryId?: number;
+  category_id?: number;
 }

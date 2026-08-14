@@ -5,21 +5,21 @@ import { Book } from './book.entity';
 @Entity('borrow_request_books')
 export class BorrowRequestBook {
   @PrimaryColumn({ name: 'borrow_request_id' })
-  borrowRequestId: number;
+  borrowRequestId!: number;
 
   @PrimaryColumn({ name: 'book_id' })
-  bookId: number;
+  bookId!: number;
 
   @ManyToOne(() => BorrowRequest, (request) => request.books, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'borrow_request_id' })
-  borrowRequest: BorrowRequest;
+  borrowRequest!: BorrowRequest;
 
   @ManyToOne(() => Book)
   @JoinColumn({ name: 'book_id' })
-  book: Book;
+  book!: Book;
 
   @Column({ type: 'int', default: 1 })
-  quantity: number;
+  quantity!: number;
 }

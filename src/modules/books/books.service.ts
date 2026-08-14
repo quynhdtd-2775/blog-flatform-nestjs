@@ -15,7 +15,7 @@ export class BooksService {
   ) {}
 
   async findAll(query: FindBooksDto) {
-    const { page = 1, limit = 10, search, authorId, categoryId } = query;
+    const { page = 1, limit = 10, keyword, author_id, category_id } = query;
 
     const queryBuilder = this.bookRepo
       .createQueryBuilder('book')
@@ -24,18 +24,20 @@ export class BooksService {
       .leftJoinAndSelect('book.category', 'category')
       .orderBy('book.id', 'DESC');
 
-    if (search) {
-      queryBuilder.andWhere('book.title ILIKE :search', {
-        search: `%${search}%`,
+    if (keyword) {
+      queryBuilder.andWhere('book.title ILIKE :keyword', {
+        keyword: `%${keyword}%`,
       });
     }
 
-    if (authorId) {
-      queryBuilder.andWhere('author.id = :authorId', { authorId });
+    if (author_id) {
+      queryBuilder.andWhere('author.id = :authorId', { authorId: author_id });
     }
 
-    if (categoryId) {
-      queryBuilder.andWhere('category.id = :categoryId', { categoryId });
+    if (category_id) {
+      queryBuilder.andWhere('category.id = :categoryId', {
+        categoryId: category_id,
+      });
     }
 
     queryBuilder.take(limit).skip((page - 1) * limit);

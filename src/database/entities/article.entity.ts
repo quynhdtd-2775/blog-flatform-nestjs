@@ -13,40 +13,40 @@ import { User } from './user.entity';
 @Entity('articles')
 export class Article {
   @PrimaryGeneratedColumn()
-  articleId: number;
+  articleId!: number;
 
   @Index({ unique: true })
   @Column()
-  slug: string;
+  slug!: string;
 
   @Column()
-  title: string;
+  title!: string;
 
   @Column()
-  description: string;
+  description!: string;
 
   @Column()
-  body: string;
+  body!: string;
 
   @Column('simple-array', { nullable: true })
   tagList?: string[];
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @Column({
     type: 'varchar',
     default: 'false',
   })
-  favorited: string;
+  favorited!: string;
 
   @Column({ default: 0 })
-  favoritesCount: number;
+  favoritesCount!: number;
 
   @ManyToOne(() => User, { eager: true })
   @JoinColumn({ name: 'authorId' })
-  author: User;
+  author!: User;
 }

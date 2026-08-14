@@ -17,15 +17,15 @@ export class AuthorsService {
   ) {}
 
   async findAll(query: FindAuthorsDto) {
-    const { page = 1, limit = 10, search } = query;
+    const { page = 1, limit = 10, keyword } = query;
 
     const queryBuilder = this.authorRepo
       .createQueryBuilder('author')
       .orderBy('author.id', 'DESC');
 
-    if (search) {
-      queryBuilder.andWhere('author.name ILIKE :search', {
-        search: `%${search}%`,
+    if (keyword) {
+      queryBuilder.andWhere('author.name ILIKE :keyword', {
+        keyword: `%${keyword}%`,
       });
     }
 

@@ -11,20 +11,24 @@ import { Request } from 'express';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/auth.guard';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 type AuthenticatedRequest = Request & {
   user: { sub: number; email: string };
 };
+@ApiTags('Users')
 @Controller()
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Get('api/user')
   async getCurrentUser(@Req() req: AuthenticatedRequest) {
     return this.usersService.getCurrentUserByIdOrThrow(req.user.sub);
   }
 
+  @ApiBearerAuth()
   @Put('api/user')
   @UseGuards(JwtAuthGuard)
   async updateUser(
