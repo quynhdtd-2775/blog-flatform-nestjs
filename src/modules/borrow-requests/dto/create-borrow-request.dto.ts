@@ -8,6 +8,8 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsBeforeDate } from '../../../common/validators/is-before-date.decorator';
+import { i18n } from '../../../helpers/common';
 
 export class BorrowRequestBookDto {
   @ApiProperty({ example: 1 })
@@ -24,6 +26,9 @@ export class BorrowRequestBookDto {
 export class CreateBorrowRequestDto {
   @ApiProperty({ example: '2026-11-01' })
   @IsDateString()
+  @IsBeforeDate('toDate', {
+    message: i18n()?.t('error.borrowRequest.invalidDateRange'),
+  })
   fromDate!: string;
 
   @ApiProperty({ example: '2026-11-07' })

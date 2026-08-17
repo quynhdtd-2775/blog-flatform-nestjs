@@ -106,17 +106,6 @@ describe('BorrowRequestsService', () => {
       books: [{ bookId: 1, quantity: 2 }],
     };
 
-    it('rejects an invalid date range (fromDate >= toDate)', async () => {
-      await expect(
-        service.create(1, {
-          ...baseDto,
-          fromDate: '2026-08-17',
-          toDate: '2026-08-10',
-        }),
-      ).rejects.toBeInstanceOf(BadRequestException);
-      expect(bookRepo.find).not.toHaveBeenCalled();
-    });
-
     it('rejects when a requested book does not exist', async () => {
       (bookRepo.find as jest.Mock).mockResolvedValue([]);
 

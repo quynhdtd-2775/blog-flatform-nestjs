@@ -72,21 +72,6 @@ export class BorrowRequestsService {
     userId: number,
     dto: CreateBorrowRequestDto,
   ): Promise<BorrowRequestView> {
-    const fromDate = new Date(dto.fromDate);
-    const toDate = new Date(dto.toDate);
-
-    if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
-      throw new BadRequestException(
-        i18n()?.t('error.borrowRequest.invalidDateRange'),
-      );
-    }
-
-    if (fromDate >= toDate) {
-      throw new BadRequestException(
-        i18n()?.t('error.borrowRequest.invalidDateRange'),
-      );
-    }
-
     const bookIds = dto.books.map((item) => item.bookId);
     const books = await this.bookRepo.find({ where: { id: In(bookIds) } });
 

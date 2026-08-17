@@ -7,7 +7,6 @@ import { AppService } from './app.service';
 import { UsersModule } from './modules/users/users.module';
 import { dataSource } from './configs/typeorm.config';
 import { I18nModule, AcceptLanguageResolver } from 'nestjs-i18n';
-import { ArticlesModule } from './modules/articles/articles.module';
 import { SeedModule } from './modules/seed/seed.module';
 import { RedisModule } from './modules/redis/redis.module';
 import { BooksModule } from './modules/books/books.module';
@@ -39,7 +38,6 @@ import * as path from 'path';
     RedisModule,
     AuthModule,
     UsersModule,
-    ArticlesModule,
     SeedModule,
     BooksModule,
     AuthorsModule,
