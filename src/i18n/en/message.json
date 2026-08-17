@@ -1,3 +1,4 @@
 {
-    "signupSuccess": "Signup successful"
+    "signupSuccess": "Signup successful",
+    "logoutSuccess": "Logout successful"
 }

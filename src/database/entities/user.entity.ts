@@ -1,31 +1,40 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+} from 'typeorm';
+
+export enum UserRole {
+  ADMIN = 'ADMIN',
+  USER = 'USER',
+}
+
+export enum UserStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+}
 
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({ unique: true })
-  email: string;
+  email!: string;
 
   @Column()
-  password: string;
+  password!: string;
 
-  @Column({
-    type: 'varchar',
-    nullable: true,
-  })
-  username: string | null;
+  @Column()
+  name!: string;
 
-  @Column({
-    type: 'varchar',
-    nullable: true,
-  })
-  bio: string | null;
+  @Column({ type: 'varchar', default: UserRole.USER })
+  role!: UserRole;
 
-  @Column({
-    type: 'varchar',
-    nullable: true,
-  })
-  image: string | null;
+  @Column({ type: 'varchar', default: UserStatus.ACTIVE })
+  status!: UserStatus;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt!: Date;
 }

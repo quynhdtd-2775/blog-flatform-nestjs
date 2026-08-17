@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { JwtAuthGuard } from '../auth/auth.guard';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
+import { RedisService } from '../redis/redis.service';
 
 describe('UsersController', () => {
   let controller: UsersController;
@@ -35,6 +36,13 @@ describe('UsersController', () => {
           provide: ConfigService,
           useValue: {
             get: jest.fn(),
+          },
+        },
+        {
+          provide: RedisService,
+          useValue: {
+            exists: jest.fn(),
+            setWithTtl: jest.fn(),
           },
         },
       ],

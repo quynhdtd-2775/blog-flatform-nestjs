@@ -18,6 +18,21 @@
   "updateUser": {
     "failed": "Cập nhật người dùng thất bại"
   },
+  "book": {
+    "notFound": "Không tìm thấy sách."
+  },
+  "author": {
+    "notFound": "Không tìm thấy tác giả."
+  },
+  "borrowRequest": {
+    "notFound": "Không tìm thấy yêu cầu mượn sách.",
+    "invalidDateRange": "fromDate phải là ngày hợp lệ và trước toDate.",
+    "bookNotFound": "Một hoặc nhiều sách được yêu cầu không tồn tại.",
+    "invalidQuantity": "Số lượng phải lớn hơn 0.",
+    "notAvailable": "Sách được yêu cầu không đủ số lượng trong khoảng thời gian đã chọn.",
+    "forbidden": "Bạn không có quyền truy cập hoặc chỉnh sửa yêu cầu mượn sách này.",
+    "onlyPendingCancellable": "Chỉ có thể hủy yêu cầu đang ở trạng thái chờ duyệt."
+  },
   "article": {
     "notFound": "Bài viết không tìm thấy.",
     "createFailed": "Tạo bài viết thất bại.",

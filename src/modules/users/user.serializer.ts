@@ -8,8 +8,15 @@ export enum UserViewType {
 
 export class UserSerializer {
   private static readonly FIELD_MAP: Record<UserViewType, (keyof User)[]> = {
-    [UserViewType.BASIC_INFO]: ['id', 'username'],
-    [UserViewType.FULL_INFO]: ['id', 'username', 'email', 'bio'],
+    [UserViewType.BASIC_INFO]: ['id', 'name'],
+    [UserViewType.FULL_INFO]: [
+      'id',
+      'name',
+      'email',
+      'role',
+      'status',
+      'createdAt',
+    ],
     [UserViewType.AUTH_INFO]: ['id', 'email'],
   };
 
