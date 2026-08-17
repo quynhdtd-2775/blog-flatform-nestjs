@@ -1,67 +1,50 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Test Login API</title>
+  <title>Login</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 400px;
-      margin: 40px auto;
-    }
-    input, button, select {
-      width: 100%;
-      padding: 8px;
-      margin: 6px 0;
-    }
-    pre {
-      background: #f4f4f4;
-      padding: 10px;
-      white-space: pre-wrap;
-    }
+    body { font-family: Arial, sans-serif; max-width: 400px; margin: 40px auto; }
+    input, button { width: 100%; padding: 8px; margin: 6px 0; }
+    pre { background: #f4f4f4; padding: 10px; white-space: pre-wrap; }
   </style>
 </head>
 <body>
-
-  <h2>Login API Test</h2>
+  <h2>Login</h2>
 
   <label>Email</label>
-  <input id="email" type="email" placeholder="test@gmail.com" />
+  <input id="email" type="email" placeholder="admin@example.com" />
 
   <label>Password</label>
-  <input id="password" type="password" placeholder="123456" />
-
-  <label>Language</label>
-  <select id="lang">
-    <option value="vi">Vietnamese</option>
-    <option value="en">English</option>
-  </select>
+  <input id="password" type="password" placeholder="Admin@123" />
 
   <button onclick="login()">Login</button>
 
   <h3>Response</h3>
   <pre id="result">---</pre>
 
+  <script src="common.js"></script>
   <script>
+    renderNav('login');
+
     async function login() {
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
-      const lang = document.getElementById('lang').value;
 
-      const res = await fetch('http://localhost:3000/auth/login', {
+      const { ok, data } = await apiFetch('/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept-Language': lang
-        },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
       });
 
-      const data = await res.json();
-      document.getElementById('result').textContent =
-        JSON.stringify(data, null, 2);
+      document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+
+      if (ok && data.accessToken) {
+        saveSession(data.accessToken);
+        const user = getCurrentUser();
+        const target = user && user.role === 'ADMIN' ? 'admin.html' : 'user.html';
+        window.location.href = target;
+      }
     }
   </script>
-
 </body>
 </html>

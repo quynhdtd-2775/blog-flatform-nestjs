@@ -2,7 +2,7 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { randomUUID } from 'crypto';
+import { ConfigService } from '@nestjs/config';
 
 import { User } from '../../database/entities/user.entity';
 import { JwtService } from '@nestjs/jwt';
@@ -10,7 +10,7 @@ import { i18n } from 'src/helpers/common';
 import { UsersService } from '../users/users.service';
 import { UserSerializer, UserViewType } from '../users/user.serializer';
 import { RedisService } from '../redis/redis.service';
-import { REVOKED_TOKEN_PREFIX } from './auth.constants';
+import { USER_LOGOUT_PREFIX, parseDurationToSeconds } from './auth.constants';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +20,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
     private readonly redisService: RedisService,
+    private readonly configService: ConfigService,
   ) {}
 
   // 🔹 SIGNUP
@@ -64,7 +65,6 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       role: user.role,
-      jti: randomUUID(),
     };
 
     return {
@@ -72,17 +72,18 @@ export class AuthService {
     };
   }
 
-  // 🔹 LOGOUT
-  async logout(jti: string, exp: number) {
-    const ttlSeconds = exp - Math.floor(Date.now() / 1000);
+  // 🔹 LOGOUT (all sessions/devices for this user)
+  async logout(userId: number) {
+    const ttlSeconds = parseDurationToSeconds(
+      this.configService.get<string>('JWT_EXPIRES_IN', '1d'),
+    );
+    const now = Math.floor(Date.now() / 1000);
 
-    if (ttlSeconds > 0) {
-      await this.redisService.setWithTtl(
-        `${REVOKED_TOKEN_PREFIX}${jti}`,
-        '1',
-        ttlSeconds,
-      );
-    }
+    await this.redisService.setWithTtl(
+      `${USER_LOGOUT_PREFIX}${userId}`,
+      String(now),
+      ttlSeconds,
+    );
 
     return {
       message: i18n()?.t('message.logoutSuccess'),

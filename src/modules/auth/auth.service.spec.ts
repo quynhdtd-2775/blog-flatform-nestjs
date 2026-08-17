@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 
@@ -11,13 +12,12 @@ import {
 import { UsersService } from '../users/users.service';
 import { RedisService } from '../redis/redis.service';
 import { AuthService } from './auth.service';
-import { REVOKED_TOKEN_PREFIX } from './auth.constants';
+import { USER_LOGOUT_PREFIX } from './auth.constants';
 
 interface JwtPayload {
   sub: number;
   email: string;
   role: UserRole;
-  jti: string;
 }
 
 describe('AuthService', () => {
@@ -34,6 +34,7 @@ describe('AuthService', () => {
     setWithTtl: jest.Mock<Promise<void>, [string, string, number]>;
     exists: jest.Mock;
   };
+  let configService: { get: jest.Mock };
 
   const plainPassword = 'correct-password';
   const mockUser: User = {
@@ -57,6 +58,7 @@ describe('AuthService', () => {
       setWithTtl: jest.fn().mockResolvedValue(undefined),
       exists: jest.fn(),
     };
+    configService = { get: jest.fn().mockReturnValue('1d') };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -65,6 +67,7 @@ describe('AuthService', () => {
         { provide: JwtService, useValue: jwtService },
         { provide: UsersService, useValue: usersService },
         { provide: RedisService, useValue: redisService },
+        { provide: ConfigService, useValue: configService },
       ],
     }).compile();
 
@@ -76,7 +79,7 @@ describe('AuthService', () => {
   });
 
   describe('login', () => {
-    it('signs a JWT payload that includes a unique jti and the user role', async () => {
+    it('signs a JWT payload with the user id, email, and role', async () => {
       usersService.findByEmailOrThrow.mockResolvedValue(mockUser);
 
       await service.login('user@example.com', plainPassword);
@@ -87,35 +90,20 @@ describe('AuthService', () => {
       expect(payload.sub).toBe(mockUser.id);
       expect(payload.email).toBe(mockUser.email);
       expect(payload.role).toBe(mockUser.role);
-      expect(typeof payload.jti).toBe('string');
-      expect(payload.jti.length).toBeGreaterThan(0);
     });
   });
 
   describe('logout', () => {
-    it('revokes the token in Redis with TTL equal to the remaining lifetime', async () => {
-      const jti = 'test-jti';
-      const nowSeconds = Math.floor(Date.now() / 1000);
-      const exp = nowSeconds + 3600;
+    it('marks all sessions for the user as revoked as of now, with TTL matching JWT_EXPIRES_IN', async () => {
+      configService.get.mockReturnValue('1h');
 
-      await service.logout(jti, exp);
+      await service.logout(1);
 
       expect(redisService.setWithTtl).toHaveBeenCalledWith(
-        `${REVOKED_TOKEN_PREFIX}${jti}`,
-        '1',
-        expect.any(Number),
+        `${USER_LOGOUT_PREFIX}1`,
+        expect.any(String),
+        3600,
       );
-      const ttlArg = redisService.setWithTtl.mock.calls[0][2];
-      expect(ttlArg).toBeGreaterThan(3500);
-      expect(ttlArg).toBeLessThanOrEqual(3600);
-    });
-
-    it('does not write to Redis when the token is already expired', async () => {
-      const nowSeconds = Math.floor(Date.now() / 1000);
-
-      await service.logout('expired-jti', nowSeconds - 10);
-
-      expect(redisService.setWithTtl).not.toHaveBeenCalled();
     });
   });
 });

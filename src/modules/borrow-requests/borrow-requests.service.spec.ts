@@ -26,6 +26,7 @@ describe('BorrowRequestsService', () => {
 
   const createMockQueryBuilder = () => ({
     innerJoin: jest.fn().mockReturnThis(),
+    leftJoinAndSelect: jest.fn().mockReturnThis(),
     select: jest.fn().mockReturnThis(),
     addSelect: jest.fn().mockReturnThis(),
     where: jest.fn().mockReturnThis(),
@@ -41,6 +42,7 @@ describe('BorrowRequestsService', () => {
   const mockManager = {
     create: jest.fn((_entity: unknown, data: unknown) => data),
     save: jest.fn((_entity: unknown, data: unknown) => Promise.resolve(data)),
+    decrement: jest.fn(() => Promise.resolve()),
   };
 
   beforeEach(async () => {
@@ -87,6 +89,7 @@ describe('BorrowRequestsService', () => {
     mockManager.save.mockImplementation((_entity: unknown, data: unknown) =>
       Promise.resolve(data),
     );
+    mockManager.decrement.mockImplementation(() => Promise.resolve());
     (borrowRequestRepo.manager.transaction as jest.Mock).mockImplementation(
       (cb: (manager: unknown) => unknown) => Promise.resolve(cb(mockManager)),
     );
@@ -323,6 +326,209 @@ describe('BorrowRequestsService', () => {
       });
 
       await expect(service.cancel(1, 1)).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+    });
+  });
+
+  describe('findAllForAdmin', () => {
+    it('returns all requests across users with pagination meta', async () => {
+      const qb = createMockQueryBuilder();
+      qb.getManyAndCount.mockResolvedValue([
+        [
+          {
+            id: 1,
+            fromDate: '2026-08-10',
+            toDate: '2026-08-17',
+            status: BorrowRequestStatus.NEW,
+            rejectReason: null,
+            user: { id: 5, name: 'Jane Doe', email: 'jane@example.com' },
+          },
+        ],
+        1,
+      ]);
+      (borrowRequestRepo.createQueryBuilder as jest.Mock).mockReturnValue(qb);
+      (borrowRequestBookRepo.find as jest.Mock).mockResolvedValue([
+        {
+          borrowRequest: { id: 1 },
+          book: { id: 1, title: 'Clean Code' },
+          quantity: 1,
+        },
+      ]);
+
+      const result = await service.findAllForAdmin({ page: 1, limit: 10 });
+
+      expect(qb.leftJoinAndSelect).toHaveBeenCalledWith('br.user', 'user');
+      expect(result.data[0].user).toEqual({
+        id: 5,
+        name: 'Jane Doe',
+        email: 'jane@example.com',
+      });
+      expect(result.meta).toEqual({
+        page: 1,
+        limit: 10,
+        total: 1,
+        totalPages: 1,
+      });
+    });
+
+    it('filters by status and userId when provided', async () => {
+      const qb = createMockQueryBuilder();
+      qb.getManyAndCount.mockResolvedValue([[], 0]);
+      (borrowRequestRepo.createQueryBuilder as jest.Mock).mockReturnValue(qb);
+
+      await service.findAllForAdmin({
+        page: 1,
+        limit: 10,
+        status: BorrowRequestStatus.PENDING,
+        userId: 7,
+      });
+
+      expect(qb.andWhere).toHaveBeenCalledWith('br.status = :status', {
+        status: BorrowRequestStatus.PENDING,
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith('br.user_id = :userId', {
+        userId: 7,
+      });
+    });
+  });
+
+  describe('findOneForAdmin', () => {
+    it('returns any request regardless of owner', async () => {
+      (borrowRequestRepo.findOne as jest.Mock).mockResolvedValue({
+        id: 1,
+        fromDate: '2026-08-10',
+        toDate: '2026-08-17',
+        status: BorrowRequestStatus.NEW,
+        rejectReason: null,
+        user: { id: 5, name: 'Jane Doe', email: 'jane@example.com' },
+      });
+      (borrowRequestBookRepo.find as jest.Mock).mockResolvedValue([]);
+
+      const result = await service.findOneForAdmin(1);
+
+      expect(result.user.email).toBe('jane@example.com');
+    });
+
+    it('throws NotFoundException when the request does not exist', async () => {
+      (borrowRequestRepo.findOne as jest.Mock).mockResolvedValue(null);
+
+      await expect(service.findOneForAdmin(999)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('approve', () => {
+    it.each([BorrowRequestStatus.NEW, BorrowRequestStatus.PENDING])(
+      'approves a %s request and decrements book availability',
+      async (status) => {
+        (borrowRequestRepo.findOne as jest.Mock)
+          .mockResolvedValueOnce({ id: 1, status })
+          .mockResolvedValueOnce({
+            id: 1,
+            fromDate: '2026-08-10',
+            toDate: '2026-08-17',
+            status: BorrowRequestStatus.APPROVED,
+            rejectReason: null,
+            user: { id: 5, name: 'Jane Doe', email: 'jane@example.com' },
+          });
+        (borrowRequestBookRepo.find as jest.Mock)
+          .mockResolvedValueOnce([
+            { book: { id: 1 }, quantity: 2 },
+            { book: { id: 2 }, quantity: 1 },
+          ])
+          .mockResolvedValueOnce([]);
+
+        const result = await service.approve(1);
+
+        expect(result.status).toBe(BorrowRequestStatus.APPROVED);
+        expect(mockManager.decrement).toHaveBeenCalledWith(
+          Book,
+          { id: 1 },
+          'availableQuantity',
+          2,
+        );
+        expect(mockManager.decrement).toHaveBeenCalledWith(
+          Book,
+          { id: 2 },
+          'availableQuantity',
+          1,
+        );
+      },
+    );
+
+    it('throws NotFoundException when the request does not exist', async () => {
+      (borrowRequestRepo.findOne as jest.Mock).mockResolvedValue(null);
+
+      await expect(service.approve(999)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+
+    it.each([
+      BorrowRequestStatus.APPROVED,
+      BorrowRequestStatus.REJECTED,
+      BorrowRequestStatus.CANCELLED,
+    ])('rejects approving a request that is already %s', async (status) => {
+      (borrowRequestRepo.findOne as jest.Mock).mockResolvedValue({
+        id: 1,
+        status,
+      });
+
+      await expect(service.approve(1)).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+    });
+  });
+
+  describe('reject', () => {
+    it.each([BorrowRequestStatus.NEW, BorrowRequestStatus.PENDING])(
+      'rejects a %s request with the given reason',
+      async (status) => {
+        const request = { id: 1, status, rejectReason: null };
+        (borrowRequestRepo.findOne as jest.Mock)
+          .mockResolvedValueOnce(request)
+          .mockResolvedValueOnce({
+            id: 1,
+            fromDate: '2026-08-10',
+            toDate: '2026-08-17',
+            status: BorrowRequestStatus.REJECTED,
+            rejectReason: 'Not available',
+            user: { id: 5, name: 'Jane Doe', email: 'jane@example.com' },
+          });
+        (borrowRequestRepo.save as jest.Mock).mockImplementation(
+          (entity: unknown) => Promise.resolve(entity),
+        );
+        (borrowRequestBookRepo.find as jest.Mock).mockResolvedValue([]);
+
+        const result = await service.reject(1, 'Not available');
+
+        expect(request.status).toBe(BorrowRequestStatus.REJECTED);
+        expect(request.rejectReason).toBe('Not available');
+        expect(result.rejectReason).toBe('Not available');
+      },
+    );
+
+    it('throws NotFoundException when the request does not exist', async () => {
+      (borrowRequestRepo.findOne as jest.Mock).mockResolvedValue(null);
+
+      await expect(service.reject(999, 'reason')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+
+    it.each([
+      BorrowRequestStatus.APPROVED,
+      BorrowRequestStatus.REJECTED,
+      BorrowRequestStatus.CANCELLED,
+    ])('rejects reviewing a request that is already %s', async (status) => {
+      (borrowRequestRepo.findOne as jest.Mock).mockResolvedValue({
+        id: 1,
+        status,
+      });
+
+      await expect(service.reject(1, 'reason')).rejects.toBeInstanceOf(
         BadRequestException,
       );
     });

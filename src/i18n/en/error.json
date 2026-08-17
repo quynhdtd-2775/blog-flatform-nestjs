@@ -13,7 +13,8 @@
     "emailExists": "Email already exists.",
     "validAccessToken": "Missing access token.",
     "invalidAccessToken": "Invalid or expired token.",
-    "userNotFound": "User not found."
+    "userNotFound": "User not found.",
+    "forbidden": "You do not have permission to perform this action."
   },
   "updateUser": {
     "failed": "Failed to update user"
@@ -31,7 +32,9 @@
     "invalidQuantity": "Quantity must be greater than zero.",
     "notAvailable": "The requested books are not available for the selected period.",
     "forbidden": "You cannot access or modify this borrow request.",
-    "onlyPendingCancellable": "Only pending borrow requests can be cancelled."
+    "onlyPendingCancellable": "Only pending borrow requests can be cancelled.",
+    "onlyPendingReviewable": "Only new or pending borrow requests can be approved or rejected.",
+    "rejectReasonRequired": "A reject reason is required."
   },
   "article": {
     "notFound": "Article not found.",

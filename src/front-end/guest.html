@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Guest View</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; }
+    section { margin-bottom: 24px; }
+    input, button { padding: 6px; margin: 4px 0; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; font-size: 14px; }
+    th { background: #f4f4f4; }
+  </style>
+</head>
+<body>
+  <h2>Guest View</h2>
+  <p>Public, read-only browsing &mdash; no login required.</p>
+
+  <section>
+    <h3>Books</h3>
+    <input id="bookKeyword" placeholder="Search by title..." />
+    <button onclick="loadBooks()">Search</button>
+    <table>
+      <thead>
+        <tr><th>Title</th><th>Author</th><th>Publisher</th><th>Category</th><th>Available</th></tr>
+      </thead>
+      <tbody id="booksBody"></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h3>Authors</h3>
+    <table>
+      <thead><tr><th>Name</th><th>Bio</th></tr></thead>
+      <tbody id="authorsBody"></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h3>Categories</h3>
+    <table>
+      <thead><tr><th>Name</th></tr></thead>
+      <tbody id="categoriesBody"></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h3>Publishers</h3>
+    <table>
+      <thead><tr><th>Name</th></tr></thead>
+      <tbody id="publishersBody"></tbody>
+    </table>
+  </section>
+
+  <script src="common.js"></script>
+  <script>
+    renderNav('guest');
+
+    async function loadBooks() {
+      const keyword = document.getElementById('bookKeyword').value;
+      const query = keyword ? `?keyword=${encodeURIComponent(keyword)}` : '';
+      const { data } = await apiFetch(`/books${query}`);
+      const body = document.getElementById('booksBody');
+      body.innerHTML = (data.data || [])
+        .map(
+          (book) => `<tr>
+            <td>${book.title}</td>
+            <td>${book.author ? book.author.name : ''}</td>
+            <td>${book.publisher ? book.publisher.name : ''}</td>
+            <td>${book.category ? book.category.name : ''}</td>
+            <td>${book.availableQuantity}/${book.totalQuantity}</td>
+          </tr>`,
+        )
+        .join('');
+    }
+
+    async function loadAuthors() {
+      const { data } = await apiFetch('/authors');
+      document.getElementById('authorsBody').innerHTML = (data.data || [])
+        .map((author) => `<tr><td>${author.name}</td><td>${author.bio || ''}</td></tr>`)
+        .join('');
+    }
+
+    async function loadCategories() {
+      const { data } = await apiFetch('/categories');
+      document.getElementById('categoriesBody').innerHTML = (data.data || [])
+        .map((category) => `<tr><td>${category.name}</td></tr>`)
+        .join('');
+    }
+
+    async function loadPublishers() {
+      const { data } = await apiFetch('/publishers');
+      document.getElementById('publishersBody').innerHTML = (data.data || [])
+        .map((publisher) => `<tr><td>${publisher.name}</td></tr>`)
+        .join('');
+    }
+
+    loadBooks();
+    loadAuthors();
+    loadCategories();
+    loadPublishers();
+  </script>
+</body>
+</html>

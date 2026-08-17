@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>System Info</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; }
+    section { margin-bottom: 24px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; font-size: 14px; }
+    th { background: #f4f4f4; }
+    .ok { color: #2e7d32; font-weight: bold; }
+    .fail { color: #b00020; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>System Info</h2>
+  <p>
+    Informational only &mdash; not a login role. Nothing here requires
+    authentication.
+  </p>
+
+  <section>
+    <h3>API Health</h3>
+    <p id="health">Checking...</p>
+  </section>
+
+  <section>
+    <h3>API Metadata</h3>
+    <p id="meta">Loading...</p>
+  </section>
+
+  <section>
+    <h3>Registered Routes</h3>
+    <table>
+      <thead><tr><th>Method</th><th>Path</th></tr></thead>
+      <tbody id="routesBody"></tbody>
+    </table>
+  </section>
+
+  <script src="common.js"></script>
+  <script>
+    renderNav('system');
+
+    async function checkHealth() {
+      try {
+        const res = await fetch(`${API_BASE}/`);
+        const text = await res.text();
+        document.getElementById('health').innerHTML = res.ok
+          ? `<span class="ok">UP</span> &mdash; ${text}`
+          : `<span class="fail">DOWN</span> (HTTP ${res.status})`;
+      } catch {
+        document.getElementById('health').innerHTML = '<span class="fail">UNREACHABLE</span>';
+      }
+    }
+
+    async function loadOpenApiInfo() {
+      const res = await fetch(`${API_BASE}/docs-json`);
+      const doc = await res.json();
+      document.getElementById('meta').textContent =
+        `${doc.info.title} v${doc.info.version} — ${Object.keys(doc.paths).length} routes. ` +
+        `Full docs: ${API_BASE}/docs`;
+
+      const rows = [];
+      for (const [path, methods] of Object.entries(doc.paths)) {
+        for (const method of Object.keys(methods)) {
+          rows.push(`<tr><td>${method.toUpperCase()}</td><td>${path}</td></tr>`);
+        }
+      }
+      document.getElementById('routesBody').innerHTML = rows.join('');
+    }
+
+    checkHealth();
+    loadOpenApiInfo();
+  </script>
+</body>
+</html>

@@ -5,7 +5,7 @@ import { LoginDto, SignupDto } from './dto/dto';
 import { JwtAuthGuard } from './auth.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
-type AuthenticatedRequest = Request & { user: { jti: string; exp: number } };
+type AuthenticatedRequest = Request & { user: { sub: number } };
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -26,6 +26,6 @@ export class AuthController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   logout(@Req() req: AuthenticatedRequest) {
-    return this.authService.logout(req.user.jti, req.user.exp);
+    return this.authService.logout(req.user.sub);
   }
 }

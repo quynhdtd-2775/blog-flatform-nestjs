@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Library Platform</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 700px; margin: 40px auto; }
+    a { margin-right: 12px; }
+    .card { border: 1px solid #ddd; border-radius: 6px; padding: 16px; margin: 12px 0; }
+  </style>
+</head>
+<body>
+  <h1>Library Platform</h1>
+  <p>Simple test UI covering the four views: Guest, User, Admin, System.</p>
+
+  <div class="card">
+    <h3>Guest</h3>
+    <p>No login required. Browse books, authors, categories, publishers.</p>
+    <a href="guest.html">Open Guest View</a>
+  </div>
+
+  <div class="card">
+    <h3>User</h3>
+    <p>Log in as a regular user to comment on books, borrow books, and manage your borrow history.</p>
+    <a href="login.html">Login</a>
+    <a href="signup.html">Signup</a>
+    <a href="user.html">Open User Dashboard</a>
+  </div>
+
+  <div class="card">
+    <h3>Admin</h3>
+    <p>Log in with an admin account (seeded: admin@example.com / Admin@123). Same capabilities as User, plus user lookup.</p>
+    <a href="admin.html">Open Admin Dashboard</a>
+  </div>
+
+  <div class="card">
+    <h3>System</h3>
+    <p>No login required. API health, version, and route listing (not a user-facing role — informational only).</p>
+    <a href="system.html">Open System Info</a>
+  </div>
+
+  <script src="common.js"></script>
+  <script>renderNav('home');</script>
+</body>
+</html>

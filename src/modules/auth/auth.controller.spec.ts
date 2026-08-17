@@ -36,14 +36,14 @@ describe('AuthController', () => {
   });
 
   describe('logout', () => {
-    it('revokes only the caller own token, using jti/exp from the verified request', async () => {
+    it('logs out using the userId from the verified request', async () => {
       const req = {
-        user: { jti: 'jti-1', exp: 1234567890 },
+        user: { sub: 42 },
       } as unknown as Parameters<AuthController['logout']>[0];
 
       await controller.logout(req);
 
-      expect(authService.logout).toHaveBeenCalledWith('jti-1', 1234567890);
+      expect(authService.logout).toHaveBeenCalledWith(42);
       expect(authService.logout).toHaveBeenCalledTimes(1);
     });
   });

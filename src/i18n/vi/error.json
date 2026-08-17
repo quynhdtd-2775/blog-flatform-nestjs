@@ -13,7 +13,8 @@
     "emailExists": "Email đã tồn tại.",
     "validAccessToken": "Thiếu token truy cập.",
     "invalidAccessToken": "Token không hợp lệ hoặc đã hết hạn.",
-    "userNotFound": "Người dùng không tìm thấy."
+    "userNotFound": "Người dùng không tìm thấy.",
+    "forbidden": "Bạn không có quyền thực hiện hành động này."
   },
   "updateUser": {
     "failed": "Cập nhật người dùng thất bại"
@@ -31,7 +32,9 @@
     "invalidQuantity": "Số lượng phải lớn hơn 0.",
     "notAvailable": "Sách được yêu cầu không đủ số lượng trong khoảng thời gian đã chọn.",
     "forbidden": "Bạn không có quyền truy cập hoặc chỉnh sửa yêu cầu mượn sách này.",
-    "onlyPendingCancellable": "Chỉ có thể hủy yêu cầu đang ở trạng thái chờ duyệt."
+    "onlyPendingCancellable": "Chỉ có thể hủy yêu cầu đang ở trạng thái chờ duyệt.",
+    "onlyPendingReviewable": "Chỉ có thể duyệt hoặc từ chối yêu cầu đang ở trạng thái mới hoặc chờ duyệt.",
+    "rejectReasonRequired": "Lý do từ chối là bắt buộc."
   },
   "article": {
     "notFound": "Bài viết không tìm thấy.",

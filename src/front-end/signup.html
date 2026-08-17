@@ -3,30 +3,44 @@
 <head>
   <meta charset="UTF-8" />
   <title>Signup</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 400px; margin: 40px auto; }
+    input, button { width: 100%; padding: 8px; margin: 6px 0; }
+    pre { background: #f4f4f4; padding: 10px; white-space: pre-wrap; }
+  </style>
 </head>
 <body>
   <h2>Signup</h2>
 
-  <input id="email" placeholder="Email" />
-  <br /><br />
-  <input id="password" type="password" placeholder="Password" />
-  <br /><br />
+  <label>Name</label>
+  <input id="name" placeholder="Jane Doe" />
+
+  <label>Email</label>
+  <input id="email" type="email" placeholder="jane.doe@example.com" />
+
+  <label>Password</label>
+  <input id="password" type="password" placeholder="P@ssw0rd123" />
 
   <button onclick="signup()">Signup</button>
 
+  <h3>Response</h3>
+  <pre id="result">---</pre>
+
+  <script src="common.js"></script>
   <script>
+    renderNav('signup');
+
     async function signup() {
+      const name = document.getElementById('name').value;
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
 
-      const res = await fetch('http://localhost:3000/auth/signup', {
+      const { data } = await apiFetch('/auth/signup', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ name, email, password }),
       });
 
-      const data = await res.json();
-      alert(JSON.stringify(data));
+      document.getElementById('result').textContent = JSON.stringify(data, null, 2);
     }
   </script>
 </body>
