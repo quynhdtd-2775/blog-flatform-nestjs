@@ -5,6 +5,7 @@ import {
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Repository } from 'typeorm';
 import { BorrowRequestsService } from './borrow-requests.service';
 import { Book } from '../../database/entities/book.entity';
@@ -13,6 +14,9 @@ import {
   BorrowRequestStatus,
 } from '../../database/entities/borrow-request.entity';
 import { BorrowRequestBook } from '../../database/entities/borrow-request-book.entity';
+import { EVENT_NAMES } from '../../common/events/event-names';
+import { BorrowRequestApprovedEvent } from '../../common/events/borrow-request-approved.event';
+import { BorrowRequestRejectedEvent } from '../../common/events/borrow-request-rejected.event';
 
 describe('BorrowRequestsService', () => {
   let service: BorrowRequestsService;
@@ -23,6 +27,7 @@ describe('BorrowRequestsService', () => {
     Partial<Repository<BorrowRequestBook>>
   >;
   let bookRepo: jest.Mocked<Partial<Repository<Book>>>;
+  let eventEmitter: { emit: jest.Mock };
 
   const createMockQueryBuilder = () => ({
     innerJoin: jest.fn().mockReturnThis(),
@@ -43,6 +48,7 @@ describe('BorrowRequestsService', () => {
     create: jest.fn((_entity: unknown, data: unknown) => data),
     save: jest.fn((_entity: unknown, data: unknown) => Promise.resolve(data)),
     decrement: jest.fn(() => Promise.resolve()),
+    findOne: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -66,6 +72,8 @@ describe('BorrowRequestsService', () => {
       find: jest.fn(),
     };
 
+    eventEmitter = { emit: jest.fn() };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BorrowRequestsService,
@@ -78,6 +86,7 @@ describe('BorrowRequestsService', () => {
           useValue: borrowRequestBookRepo,
         },
         { provide: getRepositoryToken(Book), useValue: bookRepo },
+        { provide: EventEmitter2, useValue: eventEmitter },
       ],
     }).compile();
 
@@ -90,6 +99,7 @@ describe('BorrowRequestsService', () => {
       Promise.resolve(data),
     );
     mockManager.decrement.mockImplementation(() => Promise.resolve());
+    mockManager.findOne.mockImplementation(() => Promise.resolve(undefined));
     (borrowRequestRepo.manager.transaction as jest.Mock).mockImplementation(
       (cb: (manager: unknown) => unknown) => Promise.resolve(cb(mockManager)),
     );
@@ -410,7 +420,7 @@ describe('BorrowRequestsService', () => {
 
   describe('approve', () => {
     it.each([BorrowRequestStatus.NEW, BorrowRequestStatus.PENDING])(
-      'approves a %s request and decrements book availability',
+      'approves a %s request, decrements book availability, and emits BorrowRequestApproved to the owner',
       async (status) => {
         (borrowRequestRepo.findOne as jest.Mock)
           .mockResolvedValueOnce({ id: 1, status })
@@ -427,7 +437,16 @@ describe('BorrowRequestsService', () => {
             { book: { id: 1 }, quantity: 2 },
             { book: { id: 2 }, quantity: 1 },
           ])
-          .mockResolvedValueOnce([]);
+          .mockResolvedValueOnce([
+            { book: { id: 1, title: 'Clean Code' }, quantity: 2 },
+          ]);
+        mockManager.findOne.mockImplementation(
+          (_entity: unknown, options: { where: { id: number } }) =>
+            Promise.resolve({
+              id: options.where.id,
+              availableQuantity: 5,
+            }),
+        );
 
         const result = await service.approve(1);
 
@@ -444,6 +463,18 @@ describe('BorrowRequestsService', () => {
           'availableQuantity',
           1,
         );
+        expect(eventEmitter.emit).toHaveBeenCalledWith(
+          EVENT_NAMES.BORROW_REQUEST_APPROVED,
+          new BorrowRequestApprovedEvent(
+            1,
+            5,
+            'jane@example.com',
+            'Jane Doe',
+            '2026-08-10',
+            '2026-08-17',
+            [{ title: 'Clean Code', quantity: 2 }],
+          ),
+        );
       },
     );
 
@@ -453,6 +484,7 @@ describe('BorrowRequestsService', () => {
       await expect(service.approve(999)).rejects.toBeInstanceOf(
         NotFoundException,
       );
+      expect(eventEmitter.emit).not.toHaveBeenCalled();
     });
 
     it.each([
@@ -468,6 +500,27 @@ describe('BorrowRequestsService', () => {
       await expect(service.approve(1)).rejects.toBeInstanceOf(
         BadRequestException,
       );
+      expect(eventEmitter.emit).not.toHaveBeenCalled();
+    });
+
+    it('rolls back and does not emit when available_quantity is insufficient', async () => {
+      (borrowRequestRepo.findOne as jest.Mock).mockResolvedValueOnce({
+        id: 1,
+        status: BorrowRequestStatus.PENDING,
+      });
+      (borrowRequestBookRepo.find as jest.Mock).mockResolvedValueOnce([
+        { book: { id: 1 }, quantity: 3 },
+      ]);
+      mockManager.findOne.mockResolvedValueOnce({
+        id: 1,
+        availableQuantity: 2,
+      });
+
+      await expect(service.approve(1)).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+      expect(mockManager.decrement).not.toHaveBeenCalled();
+      expect(eventEmitter.emit).not.toHaveBeenCalled();
     });
   });
 
@@ -496,6 +549,18 @@ describe('BorrowRequestsService', () => {
         expect(request.status).toBe(BorrowRequestStatus.REJECTED);
         expect(request.rejectReason).toBe('Not available');
         expect(result.rejectReason).toBe('Not available');
+        expect(eventEmitter.emit).toHaveBeenCalledWith(
+          EVENT_NAMES.BORROW_REQUEST_REJECTED,
+          new BorrowRequestRejectedEvent(
+            1,
+            5,
+            'jane@example.com',
+            'Jane Doe',
+            '2026-08-10',
+            '2026-08-17',
+            'Not available',
+          ),
+        );
       },
     );
 
@@ -505,6 +570,7 @@ describe('BorrowRequestsService', () => {
       await expect(service.reject(999, 'reason')).rejects.toBeInstanceOf(
         NotFoundException,
       );
+      expect(eventEmitter.emit).not.toHaveBeenCalled();
     });
 
     it.each([
@@ -520,6 +586,30 @@ describe('BorrowRequestsService', () => {
       await expect(service.reject(1, 'reason')).rejects.toBeInstanceOf(
         BadRequestException,
       );
+      expect(eventEmitter.emit).not.toHaveBeenCalled();
+    });
+
+    it('does not decrease book availability', async () => {
+      const request = { id: 1, status: BorrowRequestStatus.PENDING };
+      (borrowRequestRepo.findOne as jest.Mock)
+        .mockResolvedValueOnce(request)
+        .mockResolvedValueOnce({
+          id: 1,
+          fromDate: '2026-08-10',
+          toDate: '2026-08-17',
+          status: BorrowRequestStatus.REJECTED,
+          rejectReason: 'reason',
+          user: { id: 5, name: 'Jane Doe', email: 'jane@example.com' },
+        });
+      (borrowRequestRepo.save as jest.Mock).mockImplementation(
+        (entity: unknown) => Promise.resolve(entity),
+      );
+      (borrowRequestBookRepo.find as jest.Mock).mockResolvedValue([]);
+
+      await service.reject(1, 'reason');
+
+      expect(mockManager.decrement).not.toHaveBeenCalled();
+      expect(borrowRequestRepo.manager.transaction).not.toHaveBeenCalled();
     });
   });
 });

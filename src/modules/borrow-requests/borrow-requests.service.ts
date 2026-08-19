@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Book } from '../../database/entities/book.entity';
 import {
   BorrowRequest,
@@ -17,6 +18,9 @@ import { buildPaginationMeta } from '../../common/pagination.util';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import { CreateBorrowRequestDto } from './dto/create-borrow-request.dto';
 import { AdminFindBorrowRequestsDto } from './dto/admin-find-borrow-requests.dto';
+import { EVENT_NAMES } from '../../common/events/event-names';
+import { BorrowRequestApprovedEvent } from '../../common/events/borrow-request-approved.event';
+import { BorrowRequestRejectedEvent } from '../../common/events/borrow-request-rejected.event';
 
 const ACTIVE_RESERVATION_STATUSES = [
   BorrowRequestStatus.NEW,
@@ -66,6 +70,7 @@ export class BorrowRequestsService {
     private readonly borrowRequestBookRepo: Repository<BorrowRequestBook>,
     @InjectRepository(Book)
     private readonly bookRepo: Repository<Book>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async create(
@@ -384,6 +389,19 @@ export class BorrowRequestsService {
     });
 
     await this.borrowRequestRepo.manager.transaction(async (manager) => {
+      for (const item of items) {
+        const book = await manager.findOne(Book, {
+          where: { id: item.book.id },
+          lock: { mode: 'pessimistic_write' },
+        });
+
+        if (!book || book.availableQuantity < item.quantity) {
+          throw new BadRequestException(
+            i18n()?.t('error.borrowRequest.notAvailable'),
+          );
+        }
+      }
+
       request.status = BorrowRequestStatus.APPROVED;
       await manager.save(BorrowRequest, request);
 
@@ -397,7 +415,25 @@ export class BorrowRequestsService {
       }
     });
 
-    return this.findOneForAdmin(id);
+    const view = await this.findOneForAdmin(id);
+
+    this.eventEmitter.emit(
+      EVENT_NAMES.BORROW_REQUEST_APPROVED,
+      new BorrowRequestApprovedEvent(
+        view.id,
+        view.user.id,
+        view.user.email,
+        view.user.name,
+        view.fromDate,
+        view.toDate,
+        view.books.map((book) => ({
+          title: book.title,
+          quantity: book.quantity,
+        })),
+      ),
+    );
+
+    return view;
   }
 
   async reject(id: number, reason: string): Promise<BorrowRequestAdminView> {
@@ -407,7 +443,22 @@ export class BorrowRequestsService {
     request.rejectReason = reason;
     await this.borrowRequestRepo.save(request);
 
-    return this.findOneForAdmin(id);
+    const view = await this.findOneForAdmin(id);
+
+    this.eventEmitter.emit(
+      EVENT_NAMES.BORROW_REQUEST_REJECTED,
+      new BorrowRequestRejectedEvent(
+        view.id,
+        view.user.id,
+        view.user.email,
+        view.user.name,
+        view.fromDate,
+        view.toDate,
+        view.rejectReason,
+      ),
+    );
+
+    return view;
   }
 
   private async loadReviewableRequestOrThrow(

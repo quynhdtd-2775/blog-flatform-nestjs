@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppController } from './app.controller';
 import { AuthModule } from './modules/auth/auth.module';
 import { AppService } from './app.service';
@@ -14,6 +15,8 @@ import { AuthorsModule } from './modules/authors/authors.module';
 import { BorrowRequestsModule } from './modules/borrow-requests/borrow-requests.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { PublishersModule } from './modules/publishers/publishers.module';
+import { EmailModule } from './modules/email/email.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import * as path from 'path';
 
 @Module({
@@ -35,6 +38,7 @@ import * as path from 'path';
       },
       resolvers: [AcceptLanguageResolver],
     }),
+    EventEmitterModule.forRoot(),
     RedisModule,
     AuthModule,
     UsersModule,
@@ -44,6 +48,8 @@ import * as path from 'path';
     BorrowRequestsModule,
     CategoriesModule,
     PublishersModule,
+    EmailModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
