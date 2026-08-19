@@ -16,6 +16,7 @@ import { i18n } from '../../helpers/common';
 import { buildPaginationMeta } from '../../common/pagination.util';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import { CreateBorrowRequestDto } from './dto/create-borrow-request.dto';
+import { AdminFindBorrowRequestsDto } from './dto/admin-find-borrow-requests.dto';
 
 const ACTIVE_RESERVATION_STATUSES = [
   BorrowRequestStatus.NEW,
@@ -24,6 +25,11 @@ const ACTIVE_RESERVATION_STATUSES = [
 ];
 
 const CANCELLABLE_STATUSES = [
+  BorrowRequestStatus.NEW,
+  BorrowRequestStatus.PENDING,
+];
+
+const REVIEWABLE_STATUSES = [
   BorrowRequestStatus.NEW,
   BorrowRequestStatus.PENDING,
 ];
@@ -41,6 +47,14 @@ export interface BorrowRequestView {
   status: BorrowRequestStatus;
   rejectReason: string | null;
   books: BorrowRequestBookView[];
+}
+
+export interface BorrowRequestAdminView extends BorrowRequestView {
+  user: {
+    id: number;
+    name: string;
+    email: string;
+  };
 }
 
 @Injectable()
@@ -262,5 +276,155 @@ export class BorrowRequestsService {
       id: saved.id,
       status: saved.status,
     };
+  }
+
+  async findAllForAdmin(query: AdminFindBorrowRequestsDto): Promise<{
+    data: BorrowRequestAdminView[];
+    meta: ReturnType<typeof buildPaginationMeta>;
+  }> {
+    const { page = 1, limit = 10, status, userId } = query;
+
+    const queryBuilder = this.borrowRequestRepo
+      .createQueryBuilder('br')
+      .leftJoinAndSelect('br.user', 'user')
+      .orderBy('br.createdAt', 'DESC');
+
+    if (status) {
+      queryBuilder.andWhere('br.status = :status', { status });
+    }
+
+    if (userId) {
+      queryBuilder.andWhere('br.user_id = :userId', { userId });
+    }
+
+    const [requests, total] = await queryBuilder
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+
+    const requestIds = requests.map((request) => request.id);
+
+    const items = requestIds.length
+      ? await this.borrowRequestBookRepo.find({
+          where: { borrowRequest: { id: In(requestIds) } },
+          relations: ['book', 'borrowRequest'],
+        })
+      : [];
+
+    const booksByRequestId = new Map<number, BorrowRequestBookView[]>();
+
+    for (const item of items) {
+      const list = booksByRequestId.get(item.borrowRequest.id) ?? [];
+      list.push({
+        id: item.book.id,
+        title: item.book.title,
+        quantity: item.quantity,
+      });
+      booksByRequestId.set(item.borrowRequest.id, list);
+    }
+
+    return {
+      data: requests.map((request) => ({
+        id: request.id,
+        fromDate: request.fromDate,
+        toDate: request.toDate,
+        status: request.status,
+        rejectReason: request.rejectReason,
+        books: booksByRequestId.get(request.id) ?? [],
+        user: {
+          id: request.user.id,
+          name: request.user.name,
+          email: request.user.email,
+        },
+      })),
+      meta: buildPaginationMeta(page, limit, total),
+    };
+  }
+
+  async findOneForAdmin(id: number): Promise<BorrowRequestAdminView> {
+    const request = await this.borrowRequestRepo.findOne({
+      where: { id },
+      relations: ['user'],
+    });
+
+    if (!request) {
+      throw new NotFoundException(i18n()?.t('error.borrowRequest.notFound'));
+    }
+
+    const items = await this.borrowRequestBookRepo.find({
+      where: { borrowRequest: { id } },
+      relations: ['book'],
+    });
+
+    return {
+      id: request.id,
+      fromDate: request.fromDate,
+      toDate: request.toDate,
+      status: request.status,
+      rejectReason: request.rejectReason,
+      books: items.map((item) => ({
+        id: item.book.id,
+        title: item.book.title,
+        quantity: item.quantity,
+      })),
+      user: {
+        id: request.user.id,
+        name: request.user.name,
+        email: request.user.email,
+      },
+    };
+  }
+
+  async approve(id: number): Promise<BorrowRequestAdminView> {
+    const request = await this.loadReviewableRequestOrThrow(id);
+
+    const items = await this.borrowRequestBookRepo.find({
+      where: { borrowRequest: { id } },
+      relations: ['book'],
+    });
+
+    await this.borrowRequestRepo.manager.transaction(async (manager) => {
+      request.status = BorrowRequestStatus.APPROVED;
+      await manager.save(BorrowRequest, request);
+
+      for (const item of items) {
+        await manager.decrement(
+          Book,
+          { id: item.book.id },
+          'availableQuantity',
+          item.quantity,
+        );
+      }
+    });
+
+    return this.findOneForAdmin(id);
+  }
+
+  async reject(id: number, reason: string): Promise<BorrowRequestAdminView> {
+    const request = await this.loadReviewableRequestOrThrow(id);
+
+    request.status = BorrowRequestStatus.REJECTED;
+    request.rejectReason = reason;
+    await this.borrowRequestRepo.save(request);
+
+    return this.findOneForAdmin(id);
+  }
+
+  private async loadReviewableRequestOrThrow(
+    id: number,
+  ): Promise<BorrowRequest> {
+    const request = await this.borrowRequestRepo.findOne({ where: { id } });
+
+    if (!request) {
+      throw new NotFoundException(i18n()?.t('error.borrowRequest.notFound'));
+    }
+
+    if (!REVIEWABLE_STATUSES.includes(request.status)) {
+      throw new BadRequestException(
+        i18n()?.t('error.borrowRequest.onlyPendingReviewable'),
+      );
+    }
+
+    return request;
   }
 }

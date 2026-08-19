@@ -10,7 +10,6 @@ export class AuthorsController {
 
   @Get()
   findAll(@Query() query: FindAuthorsDto) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this.authorsService.findAll(query);
   }
 

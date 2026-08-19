@@ -4,12 +4,12 @@ import { ConfigService } from '@nestjs/config';
 
 import { JwtAuthGuard } from './auth.guard';
 import { RedisService } from '../redis/redis.service';
-import { REVOKED_TOKEN_PREFIX } from './auth.constants';
+import { USER_LOGOUT_PREFIX } from './auth.constants';
 
 describe('JwtAuthGuard', () => {
   let guard: JwtAuthGuard;
   let jwtService: { verifyAsync: jest.Mock };
-  let redisService: { exists: jest.Mock };
+  let redisService: { get: jest.Mock };
   let configService: { get: jest.Mock };
 
   const buildContext = (authHeader?: string): ExecutionContext => {
@@ -26,7 +26,7 @@ describe('JwtAuthGuard', () => {
 
   beforeEach(() => {
     jwtService = { verifyAsync: jest.fn() };
-    redisService = { exists: jest.fn() };
+    redisService = { get: jest.fn() };
     configService = { get: jest.fn().mockReturnValue('secret') };
 
     guard = new JwtAuthGuard(
@@ -50,57 +50,84 @@ describe('JwtAuthGuard', () => {
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
-  it('allows a valid, non-revoked token', async () => {
+  it('allows a token issued before any logout-all for that user', async () => {
     jwtService.verifyAsync.mockResolvedValue({
       sub: 1,
-      jti: 'jti-1',
+      iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 3600,
     });
-    redisService.exists.mockResolvedValue(false);
+    redisService.get.mockResolvedValue(null);
 
     const context = buildContext('Bearer good-token');
 
     await expect(guard.canActivate(context)).resolves.toBe(true);
-    expect(redisService.exists).toHaveBeenCalledWith(
-      `${REVOKED_TOKEN_PREFIX}jti-1`,
-    );
+    expect(redisService.get).toHaveBeenCalledWith(`${USER_LOGOUT_PREFIX}1`);
   });
 
-  it('rejects a revoked token', async () => {
+  it('rejects a token issued before the user logged out everywhere', async () => {
+    const issuedAt = Math.floor(Date.now() / 1000) - 100;
     jwtService.verifyAsync.mockResolvedValue({
       sub: 1,
-      jti: 'jti-1',
-      exp: Math.floor(Date.now() / 1000) + 3600,
+      iat: issuedAt,
+      exp: issuedAt + 3600,
     });
-    redisService.exists.mockResolvedValue(true);
+    redisService.get.mockResolvedValue(String(issuedAt + 10));
 
     await expect(
-      guard.canActivate(buildContext('Bearer revoked-token')),
+      guard.canActivate(buildContext('Bearer stale-token')),
     ).rejects.toBeInstanceOf(UnauthorizedException);
+  });
+
+  it('allows a token issued after the last logout-all', async () => {
+    const loggedOutAt = Math.floor(Date.now() / 1000) - 100;
+    const issuedAt = loggedOutAt + 50;
+    jwtService.verifyAsync.mockResolvedValue({
+      sub: 1,
+      iat: issuedAt,
+      exp: issuedAt + 3600,
+    });
+    redisService.get.mockResolvedValue(String(loggedOutAt));
+
+    await expect(
+      guard.canActivate(buildContext('Bearer fresh-token')),
+    ).resolves.toBe(true);
+  });
+
+  it('allows a token issued in the same second as the logout-all marker (regression: a fresh login right after logout must not be rejected)', async () => {
+    const now = Math.floor(Date.now() / 1000);
+    jwtService.verifyAsync.mockResolvedValue({
+      sub: 1,
+      iat: now,
+      exp: now + 3600,
+    });
+    redisService.get.mockResolvedValue(String(now));
+
+    await expect(
+      guard.canActivate(buildContext('Bearer same-second-login-token')),
+    ).resolves.toBe(true);
   });
 
   it('fails open (allows the request) when Redis is unavailable', async () => {
     jwtService.verifyAsync.mockResolvedValue({
       sub: 1,
-      jti: 'jti-1',
+      iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 3600,
     });
-    redisService.exists.mockRejectedValue(new Error('ECONNREFUSED'));
+    redisService.get.mockRejectedValue(new Error('ECONNREFUSED'));
 
     await expect(
       guard.canActivate(buildContext('Bearer good-token')),
     ).resolves.toBe(true);
   });
 
-  it('skips the revocation check for tokens without a jti', async () => {
+  it('skips the revocation check for tokens without sub/iat', async () => {
     jwtService.verifyAsync.mockResolvedValue({
-      sub: 1,
       exp: Math.floor(Date.now() / 1000) + 3600,
     });
 
     await expect(
       guard.canActivate(buildContext('Bearer legacy-token')),
     ).resolves.toBe(true);
-    expect(redisService.exists).not.toHaveBeenCalled();
+    expect(redisService.get).not.toHaveBeenCalled();
   });
 });

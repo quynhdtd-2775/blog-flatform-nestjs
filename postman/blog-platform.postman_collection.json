@@ -1,0 +1,467 @@
+{
+  "info": {
+    "name": "Blog / Library Platform API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Full API coverage: auth, users, articles, books, authors, categories, publishers, comments, borrow requests, admin borrow requests."
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Signup",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "auth": { "type": "noauth" },
+            "url": { "raw": "{{baseUrl}}/auth/signup", "host": ["{{baseUrl}}"], "path": ["auth", "signup"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane.doe@example.com\",\n  \"password\": \"P@ssw0rd123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login (User)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "auth": { "type": "noauth" },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jane.doe@example.com\",\n  \"password\": \"P@ssw0rd123\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "(function () {",
+                  "  var data = pm.response.json();",
+                  "  if (data.accessToken) {",
+                  "    pm.environment.set('accessToken', data.accessToken);",
+                  "    console.log('Saved accessToken to environment');",
+                  "  }",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login (Admin, seeded)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "auth": { "type": "noauth" },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"Admin@123\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "(function () {",
+                  "  var data = pm.response.json();",
+                  "  if (data.accessToken) {",
+                  "    pm.environment.set('adminAccessToken', data.accessToken);",
+                  "    console.log('Saved adminAccessToken to environment');",
+                  "  }",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/user", "host": ["{{baseUrl}}"], "path": ["api", "user"] }
+          }
+        },
+        {
+          "name": "Update Current User",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/user", "host": ["{{baseUrl}}"], "path": ["api", "user"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane D. Updated\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Profile By Id (public)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "url": { "raw": "{{baseUrl}}/api/profile/2", "host": ["{{baseUrl}}"], "path": ["api", "profile", "2"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Books",
+      "item": [
+        {
+          "name": "List Books",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "url": {
+              "raw": "{{baseUrl}}/books?page=1&limit=10&keyword=clean&author_id=&category_id=",
+              "host": ["{{baseUrl}}"], "path": ["books"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "keyword", "value": "clean" },
+                { "key": "author_id", "value": "", "disabled": true },
+                { "key": "category_id", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Book Detail",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "url": { "raw": "{{baseUrl}}/books/{{bookId}}", "host": ["{{baseUrl}}"], "path": ["books", "{{bookId}}"] }
+          }
+        },
+        {
+          "name": "Add Comment to Book",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/books/{{bookId}}/comments", "host": ["{{baseUrl}}"], "path": ["books", "{{bookId}}", "comments"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Best programming book I have read.\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authors",
+      "item": [
+        {
+          "name": "List Authors",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "url": {
+              "raw": "{{baseUrl}}/authors?page=1&limit=10&keyword=",
+              "host": ["{{baseUrl}}"], "path": ["authors"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "keyword", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Author Detail",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "url": { "raw": "{{baseUrl}}/authors/1", "host": ["{{baseUrl}}"], "path": ["authors", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "List Categories",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "url": { "raw": "{{baseUrl}}/categories?page=1&limit=10", "host": ["{{baseUrl}}"], "path": ["categories"], "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "10" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Publishers",
+      "item": [
+        {
+          "name": "List Publishers",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "url": { "raw": "{{baseUrl}}/publishers?page=1&limit=10", "host": ["{{baseUrl}}"], "path": ["publishers"], "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "10" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Articles",
+      "item": [
+        {
+          "name": "List Articles",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/articles", "host": ["{{baseUrl}}"], "path": ["articles"] }
+          }
+        },
+        {
+          "name": "Create Article",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/articles", "host": ["{{baseUrl}}"], "path": ["articles"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"article\": {\n    \"title\": \"How to write clean code\",\n    \"description\": \"A short introduction to writing maintainable code.\",\n    \"body\": \"Full article content goes here...\",\n    \"tagList\": [\"nestjs\", \"clean-code\"]\n  }\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "(function () {",
+                  "  var data = pm.response.json();",
+                  "  var id = data && data.article && data.article.articleId;",
+                  "  if (id) {",
+                  "    pm.environment.set('articleId', id);",
+                  "    console.log('Saved articleId', id);",
+                  "  }",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Article Detail",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/articles/{{articleId}}", "host": ["{{baseUrl}}"], "path": ["articles", "{{articleId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Borrow Requests (User)",
+      "item": [
+        {
+          "name": "Create Borrow Request",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/borrow-requests", "host": ["{{baseUrl}}"], "path": ["borrow-requests"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fromDate\": \"2028-03-01\",\n  \"toDate\": \"2028-03-07\",\n  \"books\": [\n    { \"bookId\": {{bookId}}, \"quantity\": 1 }\n  ]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "(function () {",
+                  "  var data = pm.response.json();",
+                  "  if (data.id) {",
+                  "    pm.environment.set('borrowRequestId', data.id);",
+                  "    console.log('Saved borrowRequestId', data.id);",
+                  "  }",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "My Borrow History",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/borrow-requests/history?page=1&limit=10", "host": ["{{baseUrl}}"], "path": ["borrow-requests", "history"], "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "10" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Borrow Requests",
+      "auth": {
+        "type": "bearer",
+        "bearer": [{ "key": "token", "value": "{{adminAccessToken}}", "type": "string" }]
+      },
+      "item": [
+        {
+          "name": "List All Borrow Requests (admin)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/admin/borrow-requests?page=1&limit=10&status=&userId=",
+              "host": ["{{baseUrl}}"], "path": ["admin", "borrow-requests"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "status", "value": "", "disabled": true, "description": "NEW | PENDING | APPROVED | REJECTED | CANCELLED" },
+                { "key": "userId", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Borrow Request Detail (admin)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/admin/borrow-requests/{{borrowRequestId}}", "host": ["{{baseUrl}}"], "path": ["admin", "borrow-requests", "{{borrowRequestId}}"] }
+          }
+        },
+        {
+          "name": "Approve Borrow Request",
+          "request": {
+            "description": "Approves the request created in 'Borrow Requests (User) > Create Borrow Request'. This request is NEW at this point, so approval succeeds.",
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/admin/borrow-requests/{{borrowRequestId}}/approve", "host": ["{{baseUrl}}"], "path": ["admin", "borrow-requests", "{{borrowRequestId}}", "approve"] }
+          }
+        },
+        {
+          "name": "Create Borrow Request (fresh, for Reject demo)",
+          "request": {
+            "description": "Approve/Reject/Cancel are mutually exclusive terminal actions on the same request, so Reject needs its own fresh NEW request rather than reusing the one just approved above. Uses the regular (non-admin) borrow-requests endpoint, so it inherits the collection's {{accessToken}}, not {{adminAccessToken}} — override the Authorization header here to the user token if your admin account differs from the user account.",
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "url": { "raw": "{{baseUrl}}/borrow-requests", "host": ["{{baseUrl}}"], "path": ["borrow-requests"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fromDate\": \"2028-04-01\",\n  \"toDate\": \"2028-04-07\",\n  \"books\": [\n    { \"bookId\": {{bookId}}, \"quantity\": 1 }\n  ]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "(function () {",
+                  "  var data = pm.response.json();",
+                  "  if (data.id) {",
+                  "    pm.environment.set('borrowRequestId', data.id);",
+                  "    console.log('Saved fresh borrowRequestId for reject demo', data.id);",
+                  "  }",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject Borrow Request",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/admin/borrow-requests/{{borrowRequestId}}/reject", "host": ["{{baseUrl}}"], "path": ["admin", "borrow-requests", "{{borrowRequestId}}", "reject"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Book needed for maintenance.\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cancel Borrow Request (User, standalone demo)",
+      "item": [
+        {
+          "name": "Create Borrow Request (fresh, for Cancel demo)",
+          "request": {
+            "description": "Cancel only works on a NEW/PENDING request, so this creates a fresh one rather than reusing one already approved/rejected above.",
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/borrow-requests", "host": ["{{baseUrl}}"], "path": ["borrow-requests"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fromDate\": \"2028-05-01\",\n  \"toDate\": \"2028-05-07\",\n  \"books\": [\n    { \"bookId\": {{bookId}}, \"quantity\": 1 }\n  ]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "(function () {",
+                  "  var data = pm.response.json();",
+                  "  if (data.id) {",
+                  "    pm.environment.set('borrowRequestId', data.id);",
+                  "    console.log('Saved fresh borrowRequestId for cancel demo', data.id);",
+                  "  }",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cancel My Borrow Request",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/borrow-requests/{{borrowRequestId}}/cancel", "host": ["{{baseUrl}}"], "path": ["borrow-requests", "{{borrowRequestId}}", "cancel"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Logout (run this folder last)",
+      "item": [
+        {
+          "name": "Logout",
+          "request": {
+            "description": "Revokes the current {{accessToken}}. Run this LAST, after you're done testing other folders, since it invalidates the token they depend on.",
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/auth/logout", "host": ["{{baseUrl}}"], "path": ["auth", "logout"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "url": { "raw": "{{baseUrl}}/", "host": ["{{baseUrl}}"], "path": [""] }
+          }
+        },
+        {
+          "name": "Swagger JSON",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "url": { "raw": "{{baseUrl}}/docs-json", "host": ["{{baseUrl}}"], "path": ["docs-json"] }
+          }
+        }
+      ]
+    }
+  ]
+}

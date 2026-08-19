@@ -19,7 +19,7 @@ describe('BorrowRequestsController', () => {
     sub: 42,
     email: 'user@example.com',
     role: 'USER' as never,
-    jti: 'jti-1',
+    iat: 1700000000,
     exp: 9999999999,
   };
 

@@ -10,7 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
 import { i18n } from 'src/helpers/common';
 import { RedisService } from '../redis/redis.service';
-import { REVOKED_TOKEN_PREFIX } from './auth.constants';
+import { USER_LOGOUT_PREFIX } from './auth.constants';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -30,7 +30,7 @@ export class JwtAuthGuard implements CanActivate {
       throw new UnauthorizedException(i18n().t('error.auth.validAccessToken'));
     }
 
-    let payload: { jti?: string; [key: string]: unknown };
+    let payload: { sub?: number; iat?: number; [key: string]: unknown };
 
     try {
       payload = await this.jwtService.verifyAsync(token, {
@@ -42,7 +42,11 @@ export class JwtAuthGuard implements CanActivate {
       );
     }
 
-    if (payload.jti && (await this.isTokenRevoked(payload.jti))) {
+    if (
+      payload.sub !== undefined &&
+      payload.iat !== undefined &&
+      (await this.isSessionRevoked(payload.sub, payload.iat))
+    ) {
       throw new UnauthorizedException(
         i18n().t('error.auth.invalidAccessToken'),
       );
@@ -52,9 +56,16 @@ export class JwtAuthGuard implements CanActivate {
     return true;
   }
 
-  private async isTokenRevoked(jti: string): Promise<boolean> {
+  private async isSessionRevoked(
+    userId: number,
+    issuedAt: number,
+  ): Promise<boolean> {
     try {
-      return await this.redisService.exists(`${REVOKED_TOKEN_PREFIX}${jti}`);
+      const loggedOutAt = await this.redisService.get(
+        `${USER_LOGOUT_PREFIX}${userId}`,
+      );
+
+      return loggedOutAt !== null && issuedAt < Number(loggedOutAt);
     } catch (error) {
       this.logger.warn(
         `Redis unavailable while checking token revocation, allowing request: ${(error as Error).message}`,
