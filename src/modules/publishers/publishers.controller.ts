@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { PublishersService } from './publishers.service';
 import { FindPublishersDto } from './dto/find-publishers.dto';
 import { ApiTags } from '@nestjs/swagger';
@@ -11,5 +11,10 @@ export class PublishersController {
   @Get()
   findAll(@Query() query: FindPublishersDto) {
     return this.publishersService.findAll(query);
+  }
+
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.publishersService.findOne(id);
   }
 }

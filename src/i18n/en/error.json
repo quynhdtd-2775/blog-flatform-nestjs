@@ -2,7 +2,9 @@
   "validation": {
     "required": "This field is required.",
     "email": "Invalid email format.",
-    "image": "Invalid image format. Allowed formats: jpg, jpeg, png.",
+    "image": "Invalid image format. Allowed formats: jpg, jpeg, png, webp.",
+    "fileRequired": "A file is required.",
+    "fileTooLarge": "File is too large.",
     "minLength": "This field must be at least {min} characters long.",
     "maxLength": "This field must be no more than {max} characters long.",
     "invalidCredentials": "Invalid credentials.",
@@ -24,6 +26,12 @@
   },
   "author": {
     "notFound": "Author not found."
+  },
+  "category": {
+    "notFound": "Category not found."
+  },
+  "publisher": {
+    "notFound": "Publisher not found."
   },
   "borrowRequest": {
     "notFound": "Borrow request not found.",

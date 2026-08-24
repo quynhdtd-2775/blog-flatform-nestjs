@@ -2,7 +2,9 @@
   "validation": {
     "required": "Trường này là bắt buộc.",
     "email": "Vui lòng nhập địa chỉ email hợp lệ.",
-    "image": "Định dạng hình ảnh không hợp lệ. Các định dạng được phép: jpg, jpeg, png.",
+    "image": "Định dạng hình ảnh không hợp lệ. Các định dạng được phép: jpg, jpeg, png, webp.",
+    "fileRequired": "Vui lòng chọn một tệp.",
+    "fileTooLarge": "Tệp quá lớn.",
     "minLength": "Trường này phải có ít nhất {min} ký tự.",
     "maxLength": "Trường này phải có nhiều nhất {max} ký tự.",
     "invalidCredentials": "Thông tin đăng nhập không hợp lệ.",
@@ -24,6 +26,12 @@
   },
   "author": {
     "notFound": "Không tìm thấy tác giả."
+  },
+  "category": {
+    "notFound": "Không tìm thấy danh mục."
+  },
+  "publisher": {
+    "notFound": "Không tìm thấy nhà xuất bản."
   },
   "borrowRequest": {
     "notFound": "Không tìm thấy yêu cầu mượn sách.",

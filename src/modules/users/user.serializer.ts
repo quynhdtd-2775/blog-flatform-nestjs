@@ -16,6 +16,7 @@ export class UserSerializer {
       'role',
       'status',
       'createdAt',
+      'avatarPath',
     ],
     [UserViewType.AUTH_INFO]: ['id', 'email'],
   };

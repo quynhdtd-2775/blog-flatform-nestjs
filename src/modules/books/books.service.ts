@@ -6,12 +6,14 @@ import { i18n } from '../../helpers/common';
 import { buildPaginationMeta } from '../../common/pagination.util';
 import { FindBooksDto } from './dto/find-books.dto';
 import { serializeBook } from './book.serializer';
+import { StorageService } from '../storage/storage.service';
 
 @Injectable()
 export class BooksService {
   constructor(
     @InjectRepository(Book)
     private readonly bookRepo: Repository<Book>,
+    private readonly storageService: StorageService,
   ) {}
 
   async findAll(query: FindBooksDto) {
@@ -66,5 +68,27 @@ export class BooksService {
   async findOne(id: number) {
     const book = await this.findOneOrThrow(id);
     return serializeBook(book);
+  }
+
+  async updateCover(id: number, file: Express.Multer.File) {
+    const book = await this.findOneOrThrow(id);
+
+    const key = await this.storageService.save({
+      buffer: file.buffer,
+      originalName: file.originalname,
+      folder: 'books',
+    });
+
+    if (book.coverPath) {
+      await this.storageService.remove(book.coverPath);
+    }
+
+    book.coverPath = key;
+    await this.bookRepo.save(book);
+
+    return {
+      coverPath: book.coverPath,
+      coverUrl: this.storageService.getPublicUrl(book.coverPath),
+    };
   }
 }

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { AppController } from './app.controller';
 import { AuthModule } from './modules/auth/auth.module';
 import { AppService } from './app.service';
@@ -17,6 +18,7 @@ import { CategoriesModule } from './modules/categories/categories.module';
 import { PublishersModule } from './modules/publishers/publishers.module';
 import { EmailModule } from './modules/email/email.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { StorageModule } from './modules/storage/storage.module';
 import * as path from 'path';
 
 @Module({
@@ -30,6 +32,10 @@ import * as path from 'path';
       useFactory: () => dataSource.options,
       inject: [ConfigService],
     }),
+    ServeStaticModule.forRoot({
+      rootPath: path.join(process.cwd(), process.env.UPLOAD_DIR ?? 'uploads'),
+      serveRoot: '/uploads',
+    }),
     I18nModule.forRoot({
       fallbackLanguage: 'en',
       loaderOptions: {
@@ -40,6 +46,7 @@ import * as path from 'path';
     }),
     EventEmitterModule.forRoot(),
     RedisModule,
+    StorageModule,
     AuthModule,
     UsersModule,
     SeedModule,

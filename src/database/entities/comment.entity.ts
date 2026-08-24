@@ -4,10 +4,12 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Book } from './book.entity';
 import { User } from './user.entity';
+import { CommentImage } from './comment-image.entity';
 
 @Entity('comments')
 export class Comment {
@@ -27,4 +29,7 @@ export class Comment {
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
+
+  @OneToMany(() => CommentImage, (image) => image.comment)
+  images!: CommentImage[];
 }

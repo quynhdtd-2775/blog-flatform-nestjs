@@ -45,6 +45,7 @@ describe('AuthService', () => {
     role: UserRole.USER,
     status: UserStatus.ACTIVE,
     createdAt: new Date(),
+    avatarPath: null,
   };
 
   beforeEach(async () => {

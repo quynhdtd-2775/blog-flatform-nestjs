@@ -1,12 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { PublishersService } from './publishers.service';
 import { Publisher } from '../../database/entities/publisher.entity';
+import { Book } from '../../database/entities/book.entity';
 
 describe('PublishersService', () => {
   let service: PublishersService;
   let publisherRepo: jest.Mocked<Partial<Repository<Publisher>>>;
+  let bookRepo: jest.Mocked<Partial<Repository<Book>>>;
 
   const createMockQueryBuilder = () => ({
     orderBy: jest.fn().mockReturnThis(),
@@ -17,12 +20,14 @@ describe('PublishersService', () => {
   });
 
   beforeEach(async () => {
-    publisherRepo = { createQueryBuilder: jest.fn() };
+    publisherRepo = { findOne: jest.fn(), createQueryBuilder: jest.fn() };
+    bookRepo = { find: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PublishersService,
         { provide: getRepositoryToken(Publisher), useValue: publisherRepo },
+        { provide: getRepositoryToken(Book), useValue: bookRepo },
       ],
     }).compile();
 
@@ -63,5 +68,32 @@ describe('PublishersService', () => {
       'publisher.name ILIKE :keyword',
       expect.objectContaining({ keyword: '%prentice%' }),
     );
+  });
+
+  it('returns the publisher with its books', async () => {
+    (publisherRepo.findOne as jest.Mock).mockResolvedValue({
+      id: 1,
+      name: 'Prentice Hall',
+    } as Publisher);
+    (bookRepo.find as jest.Mock).mockResolvedValue([
+      { id: 1, title: 'Clean Code', availableQuantity: 7 },
+    ]);
+
+    const result = await service.findOne(1);
+
+    expect(result).toEqual({
+      id: 1,
+      name: 'Prentice Hall',
+      books: [{ id: 1, title: 'Clean Code', availableQuantity: 7 }],
+    });
+  });
+
+  it('throws NotFoundException when the publisher does not exist', async () => {
+    (publisherRepo.findOne as jest.Mock).mockResolvedValue(null);
+
+    await expect(service.findOne(999)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+    expect(bookRepo.find).not.toHaveBeenCalled();
   });
 });
