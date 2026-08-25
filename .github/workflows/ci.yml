@@ -31,6 +31,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Lint (test/)
+        run: npm run lint:test
+
       - name: Type check
         run: npm run typecheck
 
@@ -43,3 +46,66 @@ jobs:
       - name: Dependency audit (report only, non-blocking)
         run: npm audit --audit-level=high
         continue-on-error: true
+
+  e2e:
+    name: E2E tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: blog_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      JWT_SECRET: e2e-test-secret
+      JWT_EXPIRES_IN: 1d
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: blog_test
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ''
+      APP_URL: http://localhost:3000
+      UPLOAD_DIR: uploads
+      MAIL_HOST: localhost
+      MAIL_PORT: 1025
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run migrations against the ephemeral test database
+        run: npm run apply:migration
+
+      - name: E2E tests
+        run: npm run test:e2e

@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   },
   "scripts": {
     "build": "nest build",
@@ -17,6 +17,7 @@
     "start:prod": "node dist/main",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "sunlint --all --input=src",
+    "lint:test": "sunlint --all --input=test",
     "lint:changed": "sunlint --all --changed-files",
     "lint:security": "sunlint --security --input=src",
     "test": "jest",
