@@ -37,4 +37,7 @@ export class User {
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
+
+  @Column({ name: 'avatar_path', type: 'varchar', nullable: true })
+  avatarPath!: string | null;
 }

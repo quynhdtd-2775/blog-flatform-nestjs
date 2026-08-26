@@ -10,12 +10,14 @@ import { checkEmailExists, i18n, loadUser } from 'src/helpers/common';
 import { Repository } from 'typeorm';
 import { UserSerializer, UserViewType } from './user.serializer';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { StorageService } from '../storage/storage.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private userRepo: Repository<User>,
+    private readonly storageService: StorageService,
   ) {}
 
   createUser(
@@ -93,5 +95,28 @@ export class UsersService {
         i18n()?.t('error.updateUser.failed'),
       );
     }
+  }
+
+  async updateAvatar(userId: number, file: Express.Multer.File) {
+    const user = await loadUser(this.userRepo, userId);
+
+    const key = await this.storageService.save({
+      buffer: file.buffer,
+      originalName: file.originalname,
+      folder: 'users',
+    });
+
+    const oldAvatarPath = user.avatarPath;
+    user.avatarPath = key;
+    await this.userRepo.save(user);
+
+    if (oldAvatarPath) {
+      await this.storageService.remove(oldAvatarPath);
+    }
+
+    return {
+      avatarPath: user.avatarPath,
+      avatarUrl: this.storageService.getPublicUrl(user.avatarPath),
+    };
   }
 }

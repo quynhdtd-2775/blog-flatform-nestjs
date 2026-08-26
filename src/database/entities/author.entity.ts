@@ -10,4 +10,7 @@ export class Author {
 
   @Column({ type: 'text', nullable: true })
   bio!: string | null;
+
+  @Column({ name: 'avatar_path', type: 'varchar', nullable: true })
+  avatarPath!: string | null;
 }

@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { BorrowRequestApprovedListener } from './borrow-request-approved.listener';
 import { BorrowRequestApprovedEvent } from '../../../common/events/borrow-request-approved.event';
@@ -45,6 +46,9 @@ describe('BorrowRequestApprovedListener', () => {
   });
 
   it('does not throw when the email fails to send', async () => {
+    const loggerErrorSpy = jest
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation(() => undefined);
     emailService.sendMail.mockRejectedValue(new Error('SMTP down'));
 
     await expect(
@@ -60,5 +64,10 @@ describe('BorrowRequestApprovedListener', () => {
         ),
       ),
     ).resolves.toBeUndefined();
+
+    expect(loggerErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('SMTP down'),
+    );
+    loggerErrorSpy.mockRestore();
   });
 });

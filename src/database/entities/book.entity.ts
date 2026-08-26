@@ -37,4 +37,7 @@ export class Book {
 
   @Column({ name: 'available_quantity', type: 'int', default: 0 })
   availableQuantity!: number;
+
+  @Column({ name: 'cover_path', type: 'varchar', nullable: true })
+  coverPath!: string | null;
 }

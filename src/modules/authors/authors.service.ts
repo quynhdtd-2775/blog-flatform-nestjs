@@ -6,6 +6,7 @@ import { Book } from '../../database/entities/book.entity';
 import { i18n } from '../../helpers/common';
 import { buildPaginationMeta } from '../../common/pagination.util';
 import { FindAuthorsDto } from './dto/find-authors.dto';
+import { StorageService } from '../storage/storage.service';
 
 @Injectable()
 export class AuthorsService {
@@ -14,6 +15,7 @@ export class AuthorsService {
     private readonly authorRepo: Repository<Author>,
     @InjectRepository(Book)
     private readonly bookRepo: Repository<Book>,
+    private readonly storageService: StorageService,
   ) {}
 
   async findAll(query: FindAuthorsDto) {
@@ -59,11 +61,39 @@ export class AuthorsService {
       id: author.id,
       name: author.name,
       bio: author.bio,
+      avatarPath: author.avatarPath,
       books: books.map((book) => ({
         id: book.id,
         title: book.title,
         availableQuantity: book.availableQuantity,
       })),
+    };
+  }
+
+  async updateAvatar(id: number, file: Express.Multer.File) {
+    const author = await this.authorRepo.findOne({ where: { id } });
+
+    if (!author) {
+      throw new NotFoundException(i18n()?.t('error.author.notFound'));
+    }
+
+    const key = await this.storageService.save({
+      buffer: file.buffer,
+      originalName: file.originalname,
+      folder: 'authors',
+    });
+
+    const oldAvatarPath = author.avatarPath;
+    author.avatarPath = key;
+    await this.authorRepo.save(author);
+
+    if (oldAvatarPath) {
+      await this.storageService.remove(oldAvatarPath);
+    }
+
+    return {
+      avatarPath: author.avatarPath,
+      avatarUrl: this.storageService.getPublicUrl(author.avatarPath),
     };
   }
 }

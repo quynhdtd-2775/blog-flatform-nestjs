@@ -1,9 +1,13 @@
 import {
   Controller,
   Get,
+  ParseFilePipe,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
   Req,
   Put,
+  Post,
   Body,
   Param,
 } from '@nestjs/common';
@@ -11,7 +15,10 @@ import { Request } from 'express';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/auth.guard';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ImageUploadInterceptor } from '../../common/upload/image-upload.interceptor';
+import { UploadFileDto } from '../../common/upload/upload-file.dto';
+import { MAX_AVATAR_SIZE } from '../../common/upload/upload.constants';
 
 type AuthenticatedRequest = Request & {
   user: { sub: number; email: string };
@@ -41,5 +48,19 @@ export class UsersController {
   @Get('api/profile/:id')
   async getProfile(@Param('id') id: number) {
     return this.usersService.findByIdOrThrow(id);
+  }
+
+  @ApiBearerAuth()
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ type: UploadFileDto })
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(ImageUploadInterceptor('file', MAX_AVATAR_SIZE))
+  @Post('api/user/avatar')
+  async uploadAvatar(
+    @Req() req: AuthenticatedRequest,
+    @UploadedFile(new ParseFilePipe({ fileIsRequired: true }))
+    file: Express.Multer.File,
+  ) {
+    return this.usersService.updateAvatar(req.user.sub, file);
   }
 }

@@ -14,5 +14,6 @@ export function serializeBook(book: Book) {
       : null,
     totalQuantity: book.totalQuantity,
     availableQuantity: book.availableQuantity,
+    coverPath: book.coverPath,
   };
 }
