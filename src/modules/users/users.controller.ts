@@ -1,7 +1,7 @@
 import {
-  BadRequestException,
   Controller,
   Get,
+  ParseFilePipe,
   UseGuards,
   UseInterceptors,
   UploadedFile,
@@ -19,7 +19,6 @@ import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { ImageUploadInterceptor } from '../../common/upload/image-upload.interceptor';
 import { UploadFileDto } from '../../common/upload/upload-file.dto';
 import { MAX_AVATAR_SIZE } from '../../common/upload/upload.constants';
-import { i18n } from '../../helpers/common';
 
 type AuthenticatedRequest = Request & {
   user: { sub: number; email: string };
@@ -59,12 +58,9 @@ export class UsersController {
   @Post('api/user/avatar')
   async uploadAvatar(
     @Req() req: AuthenticatedRequest,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile(new ParseFilePipe({ fileIsRequired: true }))
+    file: Express.Multer.File,
   ) {
-    if (!file) {
-      throw new BadRequestException(i18n()?.t('error.validation.fileRequired'));
-    }
-
     return this.usersService.updateAvatar(req.user.sub, file);
   }
 }

@@ -1,8 +1,8 @@
 import {
-  BadRequestException,
   Controller,
   Get,
   Param,
+  ParseFilePipe,
   ParseIntPipe,
   Post,
   Query,
@@ -20,7 +20,6 @@ import { UserRole } from '../../database/entities/user.entity';
 import { ImageUploadInterceptor } from '../../common/upload/image-upload.interceptor';
 import { UploadFileDto } from '../../common/upload/upload-file.dto';
 import { MAX_AVATAR_SIZE } from '../../common/upload/upload.constants';
-import { i18n } from '../../helpers/common';
 
 @ApiTags('Authors')
 @Controller('authors')
@@ -46,12 +45,9 @@ export class AuthorsController {
   @Post(':id/avatar')
   uploadAvatar(
     @Param('id', ParseIntPipe) id: number,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile(new ParseFilePipe({ fileIsRequired: true }))
+    file: Express.Multer.File,
   ) {
-    if (!file) {
-      throw new BadRequestException(i18n()?.t('error.validation.fileRequired'));
-    }
-
     return this.authorsService.updateAvatar(id, file);
   }
 }

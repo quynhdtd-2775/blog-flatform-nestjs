@@ -48,11 +48,4 @@ describe('AuthorsController', () => {
     controller.uploadAvatar(1, file);
     expect(service.updateAvatar).toHaveBeenCalledWith(1, file);
   });
-
-  it('rejects avatar upload when no file is provided', () => {
-    expect(() =>
-      controller.uploadAvatar(1, undefined as unknown as Express.Multer.File),
-    ).toThrow();
-    expect(service.updateAvatar).not.toHaveBeenCalled();
-  });
 });

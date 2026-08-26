@@ -101,11 +101,4 @@ describe('BooksController', () => {
     controller.uploadCover(1, file);
     expect(service.updateCover).toHaveBeenCalledWith(1, file);
   });
-
-  it('rejects cover upload when no file is provided', () => {
-    expect(() =>
-      controller.uploadCover(1, undefined as unknown as Express.Multer.File),
-    ).toThrow();
-    expect(service.updateCover).not.toHaveBeenCalled();
-  });
 });

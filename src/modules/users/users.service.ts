@@ -106,12 +106,13 @@ export class UsersService {
       folder: 'users',
     });
 
-    if (user.avatarPath) {
-      await this.storageService.remove(user.avatarPath);
-    }
-
+    const oldAvatarPath = user.avatarPath;
     user.avatarPath = key;
     await this.userRepo.save(user);
+
+    if (oldAvatarPath) {
+      await this.storageService.remove(oldAvatarPath);
+    }
 
     return {
       avatarPath: user.avatarPath,

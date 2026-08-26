@@ -83,12 +83,13 @@ export class AuthorsService {
       folder: 'authors',
     });
 
-    if (author.avatarPath) {
-      await this.storageService.remove(author.avatarPath);
-    }
-
+    const oldAvatarPath = author.avatarPath;
     author.avatarPath = key;
     await this.authorRepo.save(author);
+
+    if (oldAvatarPath) {
+      await this.storageService.remove(oldAvatarPath);
+    }
 
     return {
       avatarPath: author.avatarPath,

@@ -172,6 +172,9 @@ describe('BooksService', () => {
       expect(bookRepo.save).toHaveBeenCalledWith(
         expect.objectContaining({ coverPath: 'books/new.png' }),
       );
+      expect(
+        (bookRepo.save as jest.Mock).mock.invocationCallOrder[0],
+      ).toBeLessThan(storageService.remove.mock.invocationCallOrder[0]);
       expect(result).toEqual({
         coverPath: 'books/new.png',
         coverUrl: 'http://localhost:3000/uploads/books/new.png',
@@ -185,6 +188,19 @@ describe('BooksService', () => {
         NotFoundException,
       );
       expect(storageService.save).not.toHaveBeenCalled();
+    });
+
+    it('does not remove the old file when the DB save fails', async () => {
+      (bookRepo.findOne as jest.Mock).mockResolvedValue({
+        id: 1,
+        coverPath: 'books/old.png',
+      } as Book);
+      storageService.save.mockResolvedValue('books/new.png');
+      (bookRepo.save as jest.Mock).mockRejectedValue(new Error('DB down'));
+
+      await expect(service.updateCover(1, file)).rejects.toThrow('DB down');
+
+      expect(storageService.remove).not.toHaveBeenCalled();
     });
   });
 });

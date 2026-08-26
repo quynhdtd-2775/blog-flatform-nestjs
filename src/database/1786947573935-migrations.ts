@@ -1,26 +1,23 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class InitSchema1787558829640 implements MigrationInterface {
-  name = 'InitSchema1787558829640';
+export class Migrations1786947573935 implements MigrationInterface {
+  name = 'Migrations1786947573935';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `CREATE TABLE "users" ("id" SERIAL NOT NULL, "email" character varying NOT NULL, "password" character varying NOT NULL, "name" character varying NOT NULL, "role" character varying NOT NULL DEFAULT 'USER', "status" character varying NOT NULL DEFAULT 'ACTIVE', "created_at" TIMESTAMP NOT NULL DEFAULT now(), "avatar_path" character varying, CONSTRAINT "UQ_97672ac88f789774dd47f7c8be3" UNIQUE ("email"), CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "users" ("id" SERIAL NOT NULL, "email" character varying NOT NULL, "password" character varying NOT NULL, "name" character varying NOT NULL, "role" character varying NOT NULL DEFAULT 'USER', "status" character varying NOT NULL DEFAULT 'ACTIVE', "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_97672ac88f789774dd47f7c8be3" UNIQUE ("email"), CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE TABLE "publishers" ("id" SERIAL NOT NULL, "name" character varying NOT NULL, CONSTRAINT "PK_9d73f23749dca512efc3ccbea6a" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
-      `CREATE TABLE "authors" ("id" SERIAL NOT NULL, "name" character varying NOT NULL, "bio" text, "avatar_path" character varying, CONSTRAINT "PK_d2ed02fabd9b52847ccb85e6b88" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "authors" ("id" SERIAL NOT NULL, "name" character varying NOT NULL, "bio" text, CONSTRAINT "PK_d2ed02fabd9b52847ccb85e6b88" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE TABLE "categories" ("id" SERIAL NOT NULL, "name" character varying NOT NULL, CONSTRAINT "PK_24dbc6126a28ff948da33e97d3b" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
-      `CREATE TABLE "books" ("id" SERIAL NOT NULL, "title" character varying NOT NULL, "description" text, "total_quantity" integer NOT NULL DEFAULT '0', "available_quantity" integer NOT NULL DEFAULT '0', "cover_path" character varying, "author_id" integer, "publisher_id" integer, "category_id" integer, CONSTRAINT "PK_f3f2f25a099d24e12545b70b022" PRIMARY KEY ("id"))`,
-    );
-    await queryRunner.query(
-      `CREATE TABLE "comment_images" ("id" SERIAL NOT NULL, "path" character varying NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "comment_id" integer, CONSTRAINT "PK_3825085cf9ac268fc653e6e494a" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "books" ("id" SERIAL NOT NULL, "title" character varying NOT NULL, "description" text, "total_quantity" integer NOT NULL DEFAULT '0', "available_quantity" integer NOT NULL DEFAULT '0', "author_id" integer, "publisher_id" integer, "category_id" integer, CONSTRAINT "PK_f3f2f25a099d24e12545b70b022" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE TABLE "comments" ("id" SERIAL NOT NULL, "content" text NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "book_id" integer, "user_id" integer, CONSTRAINT "PK_8bf68bc960f2b69e818bdb90dcb" PRIMARY KEY ("id"))`,
@@ -45,9 +42,6 @@ export class InitSchema1787558829640 implements MigrationInterface {
     );
     await queryRunner.query(
       `ALTER TABLE "books" ADD CONSTRAINT "FK_46f5b35b90175a660f99810bc97" FOREIGN KEY ("category_id") REFERENCES "categories"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
-    );
-    await queryRunner.query(
-      `ALTER TABLE "comment_images" ADD CONSTRAINT "FK_5f1be7778111c3dcf1fca4284a5" FOREIGN KEY ("comment_id") REFERENCES "comments"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
       `ALTER TABLE "comments" ADD CONSTRAINT "FK_6eac1eb972072b64c90ec71995d" FOREIGN KEY ("book_id") REFERENCES "books"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
@@ -89,9 +83,6 @@ export class InitSchema1787558829640 implements MigrationInterface {
       `ALTER TABLE "comments" DROP CONSTRAINT "FK_6eac1eb972072b64c90ec71995d"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "comment_images" DROP CONSTRAINT "FK_5f1be7778111c3dcf1fca4284a5"`,
-    );
-    await queryRunner.query(
       `ALTER TABLE "books" DROP CONSTRAINT "FK_46f5b35b90175a660f99810bc97"`,
     );
     await queryRunner.query(
@@ -107,7 +98,6 @@ export class InitSchema1787558829640 implements MigrationInterface {
     await queryRunner.query(`DROP TABLE "borrow_requests"`);
     await queryRunner.query(`DROP TABLE "borrow_request_books"`);
     await queryRunner.query(`DROP TABLE "comments"`);
-    await queryRunner.query(`DROP TABLE "comment_images"`);
     await queryRunner.query(`DROP TABLE "books"`);
     await queryRunner.query(`DROP TABLE "categories"`);
     await queryRunner.query(`DROP TABLE "authors"`);

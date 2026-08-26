@@ -79,12 +79,13 @@ export class BooksService {
       folder: 'books',
     });
 
-    if (book.coverPath) {
-      await this.storageService.remove(book.coverPath);
-    }
-
+    const oldCoverPath = book.coverPath;
     book.coverPath = key;
     await this.bookRepo.save(book);
+
+    if (oldCoverPath) {
+      await this.storageService.remove(oldCoverPath);
+    }
 
     return {
       coverPath: book.coverPath,

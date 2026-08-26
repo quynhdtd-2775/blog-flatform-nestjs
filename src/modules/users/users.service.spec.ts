@@ -62,10 +62,26 @@ describe('UsersService', () => {
       expect(userRepo.save).toHaveBeenCalledWith(
         expect.objectContaining({ avatarPath: 'users/new.png' }),
       );
+      expect(userRepo.save.mock.invocationCallOrder[0]).toBeLessThan(
+        storageService.remove.mock.invocationCallOrder[0],
+      );
       expect(result).toEqual({
         avatarPath: 'users/new.png',
         avatarUrl: 'http://localhost:3000/uploads/users/new.png',
       });
+    });
+
+    it('does not remove the old file when the DB save fails', async () => {
+      userRepo.findOne.mockResolvedValue({
+        id: 7,
+        avatarPath: 'users/old.png',
+      } as User);
+      storageService.save.mockResolvedValue('users/new.png');
+      userRepo.save.mockRejectedValue(new Error('DB down'));
+
+      await expect(service.updateAvatar(7, file)).rejects.toThrow('DB down');
+
+      expect(storageService.remove).not.toHaveBeenCalled();
     });
   });
 });

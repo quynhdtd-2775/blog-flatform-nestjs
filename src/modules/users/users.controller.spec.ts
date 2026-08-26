@@ -67,13 +67,4 @@ describe('UsersController', () => {
 
     expect(service.updateAvatar).toHaveBeenCalledWith(7, file);
   });
-
-  it('rejects avatar upload when no file is provided', async () => {
-    const req = { user: { sub: 7, email: 'user@example.com' } } as never;
-
-    await expect(
-      controller.uploadAvatar(req, undefined as unknown as Express.Multer.File),
-    ).rejects.toThrow();
-    expect(service.updateAvatar).not.toHaveBeenCalled();
-  });
 });

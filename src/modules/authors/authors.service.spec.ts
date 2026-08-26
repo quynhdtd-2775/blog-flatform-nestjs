@@ -144,6 +144,9 @@ describe('AuthorsService', () => {
       expect(authorRepo.save).toHaveBeenCalledWith(
         expect.objectContaining({ avatarPath: 'authors/new.png' }),
       );
+      expect(
+        (authorRepo.save as jest.Mock).mock.invocationCallOrder[0],
+      ).toBeLessThan(storageService.remove.mock.invocationCallOrder[0]);
       expect(result).toEqual({
         avatarPath: 'authors/new.png',
         avatarUrl: 'http://localhost:3000/uploads/authors/new.png',
@@ -157,6 +160,20 @@ describe('AuthorsService', () => {
         NotFoundException,
       );
       expect(storageService.save).not.toHaveBeenCalled();
+    });
+
+    it('does not remove the old file when the DB save fails', async () => {
+      (authorRepo.findOne as jest.Mock).mockResolvedValue({
+        id: 1,
+        name: 'Robert C. Martin',
+        avatarPath: 'authors/old.png',
+      } as Author);
+      storageService.save.mockResolvedValue('authors/new.png');
+      (authorRepo.save as jest.Mock).mockRejectedValue(new Error('DB down'));
+
+      await expect(service.updateAvatar(1, file)).rejects.toThrow('DB down');
+
+      expect(storageService.remove).not.toHaveBeenCalled();
     });
   });
 });

@@ -1,9 +1,9 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
   Param,
+  ParseFilePipe,
   ParseIntPipe,
   Post,
   Query,
@@ -33,7 +33,6 @@ import {
   MAX_COVER_SIZE,
   MAX_REVIEW_IMAGE_SIZE,
 } from '../../common/upload/upload.constants';
-import { i18n } from '../../helpers/common';
 
 @ApiTags('Books')
 @Controller('books')
@@ -79,12 +78,9 @@ export class BooksController {
   @Post(':id/cover')
   uploadCover(
     @Param('id', ParseIntPipe) id: number,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile(new ParseFilePipe({ fileIsRequired: true }))
+    file: Express.Multer.File,
   ) {
-    if (!file) {
-      throw new BadRequestException(i18n()?.t('error.validation.fileRequired'));
-    }
-
     return this.booksService.updateCover(id, file);
   }
 }
